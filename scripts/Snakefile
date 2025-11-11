@@ -1,0 +1,160 @@
+#!/bin/bash
+
+# This Snakefile runs the pipeline for processing 2bRAD data from Stephanocoenia intersepta samples,
+# including quality filtering, removal of symbiont reads, alignment to a de novo reference genome, and indel variant calling. 
+
+# CONFIGURATION
+configfile: "config.yaml"
+
+# Get all FASTQ files and extract sample names
+SAMPLES=glob_wildcards("{rawfq_dir}/{sample}.fastq")
+
+# Define final targets
+rule all:
+    input:
+        expand("variants/{sample}.vcf.gz", sample=SAMPLES)
+
+#############################################
+# RULES
+#############################################
+
+# Initial fastqc on raw reads
+rule fastqc_raw:
+    input:
+        fq = "{rawfq_dir}/{sample}.fastq"
+    output:
+        "{rawqc_dir}/{sample}_fastqc.html",
+    shell:
+        "fastqc {input.fq} -o {rawqc_dir}"
+
+# Generate trimming commands using custom perl script
+rule make_trim_commands:
+    input:
+        "{rawfq_dir}/{sample}.fastq"
+    output:
+        "{scripts_dir}/trims.sh"
+    params:
+        site=".{12}CGA.{6}TGC.{12}|.{12}GCA.{6}TCG.{12}",
+        adaptor="AGATC?",
+        # This tells the script to name files from whole original file name:
+	sampleID=100,
+        barcode="[ATGC]{4}"
+    shell:
+        """
+        perl 2bRAD_trim_launch_dedup.pl {rawfq_dir}/{sample}.fastq \
+            site='{params.site}' \
+            adaptor='{params.adaptor}' \
+            sampleID={params.sampleID} \
+            barcode2='{params.barcode}' > {output}
+        """
+
+# Execute trimming commands
+rule execute_trims:
+	input:
+		"{scripts_dir}/trims.sh"
+	output:
+		expand("{trimfq_dir}/{sample}.tr0", sample=SAMPLES)
+	shell:
+		"bash {input}"
+
+# Quality filter with cutadapt
+rule quality_filter:
+    input:
+        fq = "{trimfq_dir}/{sample}.tr0"
+    output:
+        "{trimfq_dir}/{sample}.fastq"
+    params:
+        quality=15,15,
+        minlen=36
+    shell:
+        """
+        cutadapt -q {params.quality} -m {params.minlen} -o {output} {input.fq}
+        """
+
+# Run fastqc on trimmed reads
+rule fastqc_trimmed:
+    input:
+        fq = "{trimfq_dir}/{sample}.fastq",
+    output:
+        "{trimqc_dir}/{sample}_fastqc.html",
+    shell:
+        "fastqc {input.fq} -o {trimqc_dir}"
+
+# Create concatenated symbiont reference genome from individual symbiont genomes
+rule create_symb_reference:
+    input:
+        symb_genomes = config["symbiont_genomes"]
+    output:
+        config["reference_symbiont"]
+    shell:
+        """
+        cat {input.symb_genomes} > {output}
+        """
+
+# Align reads to symbiont reference genome
+rule align_symbiont:
+    input:
+        fq = "{trimfq_dir}/{sample}.fastq",
+        ref = config["reference_symbiont"]
+    output:
+        bam = "{symb_align_dir}/{sample}_symb.bam",
+        bai = "{symb_align_dir}/{sample}_symb.bam.bai"
+    params:
+        threads = config["threads"]
+    shell:
+        """
+        bwa mem -t {params.threads} {input.ref} {input.fq} | \
+        samtools sort -@ {params.threads} -o {output.bam}
+        samtools index {output.bam}
+        """
+
+# Exclude reads that align to symbiont genomes
+rule exclude_symbiont_reads:
+    input:
+        fq = "{trimfq_dir}/{sample}.fastq",
+        symb_bam = "{symb_align_dir}/{sample}_symb.bam"
+    output:
+        "{trimfq_noSymb_dir}/{sample}.fastq"
+    shell:
+        """
+        samtools view -b -f 4 {input.symb_bam} | \
+        samtools fastq - > {output}
+        """
+
+
+# IN PROGRESS:
+
+# Construct de novo reference
+
+
+
+# Remove clones and replicates
+
+
+
+# Align reads
+rule bwa_mem:
+    input:
+        fq1 = "trimmed/{sample}.fastq.gz",
+        ref = config["reference"]
+    output:
+        "align/{sample}.bam"
+    params:
+        threads = config["threads"]
+    shell:
+        """
+        bwa mem -t {params.threads} {input.ref} {input.fq} | \
+        samtools sort -@ {params.threads} -o {output}
+        samtools index {output}
+        """
+
+# Call INDELs
+rule call_indels:
+    input:
+        bam = "align/{sample}.bam",
+        ref = config["reference"]
+    output:
+        "variants/{sample}.vcf.gz"
+    params:
+        threads = config["threads"]
+    shell:

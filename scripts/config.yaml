@@ -1,0 +1,50 @@
+# Config for Snakefile: 2bRAD data from Stephanocoenia intersepta
+
+# IN PROGRESS 
+
+# Raw fastq file directory
+rawfq_dir:
+# Raw QC file output directory
+rawqc_dir:
+# Trimmed fastq file directory
+trimfq_dir:
+# Trimmed QC file output directory
+trimqc_dir:
+# Excluded symbiont trimmed fastq directory
+trimfq_noSymb_dir:
+# Script directory
+scripts_dir:
+# Symbiont genomes
+ - 
+ -
+ -
+# Symbiont concatenated reference genome
+reference_symbiont:
+# Symbiont alignments
+symb_align_dir:
+
+intersepta.ref:
+adapters:
+threads:
+
+
+# Project directory structure:
+# Home directory:
+#├── README.md
+#├── data/
+#│   └── SRR_numbers/
+#│       └── README.md
+#├── metadata/
+#├── results/
+#└── scripts/
+
+# Scratch directory:
+# ├── data/
+# │   ├── rawfastq/
+# │   ├── trimfastq/
+# │   ├── symGenomes/
+# │   ├── symb_align/
+# │       └── bams
+# │   └── trimmed_noSymb/
+# └── projects/
+#     └── stephanocoenia_FKNMS/
