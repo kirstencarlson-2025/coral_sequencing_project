@@ -1,4 +1,4 @@
-#!/bin/bash
+# IN PROGRESS
 
 # This Snakefile runs the pipeline for processing 2bRAD data from Stephanocoenia intersepta samples,
 # including quality filtering, removal of symbiont reads, alignment to a de novo reference genome, and indel variant calling. 
