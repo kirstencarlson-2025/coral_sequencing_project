@@ -49,7 +49,9 @@ threads: config["threads"]
 # Get all FASTQ files and extract sample names
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
 
-
+rule all:
+    input:
+        f"{denovo_ref_dir}/cleanup.done"
 
 
 
@@ -101,7 +103,7 @@ rule tab_to_fasta:
         f"{merge_dir}/all.fasta"
     shell:
         """
-        awk '{{pring ">"$1"\\n"$2}}' {input} > {output}
+        awk '{{print ">"$1"\\n"$2}}' {input} > {output}
         """
 
 # Cluster filtered tags with CD-HIT
@@ -115,20 +117,6 @@ rule cluster_tags:
     shell:
         """
         cd-hit-est -i {input} -o {output} -c {params.identity} -aL 1 -aS 1 -g 1 -T 0 -M 0
-        """
-# Cleanup intermediate files
-rule cleanup_intermediate:
-    input:
-        fq = f"{merge_dir}/cdh_alltags.fas"
-    output:
-        touch(f"{merge_dir}/cleanup.done")
-    shell:
-        """
-        rm {merge_dir}/*.uni
-        rm {merge_dir}/all.uniq
-        rm {merge_dir}/all.tab
-        rm {merge_dir}/all.fasta
-        touch {output}
         """
 
 # Remove contamination with Kraken2
@@ -187,11 +175,17 @@ rule index_denovo_ref:
 rule cleanup_denovo_intermediate:   
     input:
         fasta = f"{denovo_ref_dir}/sint_denovo_cc.fa",
-        tab = f"{denovo_ref_dir}/sint_denovo_cc.tab"
+        tab = f"{denovo_ref_dir}/sint_denovo_cc.tab",
+        fq = f"{merge_dir}/cdh_alltags.fas"
     output:
-        touch(f"{denovo_ref_dir}/denovo_cleanup.done")
+        touch(f"{denovo_ref_dir}/cleanup.done")
     shell:
         """
+        rm {merge_dir}/*.uni
+        rm {input.fq}
+        rm {merge_dir}/all.uniq
+        rm {merge_dir}/all.tab
+        rm {merge_dir}/all.fasta
         rm {input.tab}
         touch {output}
-        """
+     """

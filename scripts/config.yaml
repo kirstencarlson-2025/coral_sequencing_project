@@ -6,33 +6,33 @@
 ###############################################
 
 # Raw fastq file directory
-rawfq_dir: "/scratch/kcarls36/data/rawfastq/"
+rawfq_dir: "/scratch/kcarls36/data/rawfastq"
 # Raw QC file output directory
-rawqc_dir: "/~/projects/stephanocoenia_FKNMS/results/rawqc/"
+rawqc_dir: "/home/projects/stephanocoenia_FKNMS/results/rawqc"
 # Trimmed fastq file directory
-trimfq_dir: "/scratch/kcarls36/data/trimfastq/"
+trimfq_dir: "/scratch/kcarls36/data/trimfastq"
 # Trimmed QC file output directory
-trimqc_dir: "/~/projects/stephanocoenia_FKNMS/results/trimmedqc/"
+trimqc_dir: "/home/projects/stephanocoenia_FKNMS/results/trimmedqc"
 # Excluded symbiont trimmed fastq directory
-trimfq_noSymb_dir: "/scratch/kcarls36/data/trimmed_noSymb/"
+trimfq_noSymb_dir: "/scratch/kcarls36/data/trimmed_noSymb"
 # Aligned symbiont bam directory
-symb_align_dir: "/scratch/kcarls36/data/symb_align/bams/"
+symb_align_dir: "/scratch/kcarls36/data/symb_align/bams"
 # Merged unique reads directory
-merge_dir: "/scratch/kcarls36/data/merged_unique/"
+merge_dir: "/scratch/kcarls36/data/merged_unique"
 # De novo reference genome directory
-denovo_ref_dir: "/scratch/kcarls36/data/de_novo_ref/"
+denovo_ref_dir: "/scratch/kcarls36/data/de_novo_ref"
 # Kraken database directory
-kraken_db: "/scratch/kcarls36/data/kraken_db/"
+kraken_db: "/scratch/kcarls36/data/kraken_db"
 # Script directory
-scripts_dir: "~/bin/"
+scripts_dir: "/home/bin"
 # Symbiont genomes
 symbiont_genomes:
- - /scratch/kcarls36/projects/data/symGenomes/Symbiodinium_microadriacticum_genome.scaffold.fasta
- - /scratch/kcarls36/projects/data/symGenomes/Breviolum_minutum.v1.0.genome.fa
- - /scratch/kcarls36/projects/data/symGenomes/Cladocopium_goreaui_Genome.Scaffolds.fasta
- - /scratch/kcarls36/projects/data/symGenomes/102_symbd_genome_scaffold.fa
+ - "/scratch/kcarls36/projects/data/symGenomes/Symbiodinium_microadriacticum_genome.scaffold.fasta"
+ - "/scratch/kcarls36/projects/data/symGenomes/Breviolum_minutum.v1.0.genome.fa"
+ - "/scratch/kcarls36/projects/data/symGenomes/Cladocopium_goreaui_Genome.Scaffolds.fasta"
+ - "/scratch/kcarls36/projects/data/symGenomes/102_symbd_genome_scaffold.fa"
 # Symbiont concatenated reference genome
-reference_symbiont: /scratch/kcarls36/data/symGenomes/reference_symbiont
+reference_symbiont: "/scratch/kcarls36/data/symGenomes/reference_symbiont"
 # Number of threads to use
 threads: 8
 
