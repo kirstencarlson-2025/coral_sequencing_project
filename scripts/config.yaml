@@ -1,37 +1,44 @@
-# Config for Snakefile: 2bRAD data from Stephanocoenia intersepta
+# This Snakefile runs the pipeline for processing 2bRAD data from Stephanocoenia intersepta samples,
+# including quality filtering, removal of symbiont reads, alignment to a de novo reference genome, and indel variant calling. 
 
-# IN PROGRESS 
+###############################################
+# CONFIG FILE
+###############################################
 
 # Raw fastq file directory
-rawfq_dir: "/scratch/kcarls36/data/rawfastq"
+rawfq_dir: "/scratch/kcarls36/data/rawfastq/"
 # Raw QC file output directory
-rawqc_dir: "/~/projects/stephanocoenia_FKNMS/results/rawqc"
+rawqc_dir: "/~/projects/stephanocoenia_FKNMS/results/rawqc/"
 # Trimmed fastq file directory
-trimfq_dir: "/scratch/kcarls36/data/trimfastq"
+trimfq_dir: "/scratch/kcarls36/data/trimfastq/"
 # Trimmed QC file output directory
-trimqc_dir: "/~/projects/stephanocoenia_FKNMS/results/trimmedqc"
+trimqc_dir: "/~/projects/stephanocoenia_FKNMS/results/trimmedqc/"
 # Excluded symbiont trimmed fastq directory
-trimfq_noSymb_dir: "/scratch/kcarls36/data/trimmed_noSymb"
+trimfq_noSymb_dir: "/scratch/kcarls36/data/trimmed_noSymb/"
 # Aligned symbiont bam directory
 symb_align_dir: "/scratch/kcarls36/data/symb_align/bams/"
 # Merged unique reads directory
-merge_dir: "/scratch/kcarls36/data/merged_unique"
+merge_dir: "/scratch/kcarls36/data/merged_unique/"
+# De novo reference genome directory
+denovo_ref_dir: "/scratch/kcarls36/data/de_novo_ref/"
+# Kraken database directory
+kraken_db: "/scratch/kcarls36/data/kraken_db/"
 # Script directory
-scripts_dir: "~/bin"
+scripts_dir: "~/bin/"
 # Symbiont genomes
 symbiont_genomes:
- - genome1.fasta
- - genome2.fasta
- - genome3.fasta
+ - /scratch/kcarls36/projects/data/symGenomes/Symbiodinium_microadriacticum_genome.scaffold.fasta
+ - /scratch/kcarls36/projects/data/symGenomes/Breviolum_minutum.v1.0.genome.fa
+ - /scratch/kcarls36/projects/data/symGenomes/Cladocopium_goreaui_Genome.Scaffolds.fasta
+ - /scratch/kcarls36/projects/data/symGenomes/102_symbd_genome_scaffold.fa
 # Symbiont concatenated reference genome
-reference_symbiont: "~/projects/stephanocoenia_FKNMS/data/symGenomes/symbConcatGenome.fasta"
-# Symbiont alignments
-symb_align_dir: "/scratch/kcarls36/data/symb_align"
+reference_symbiont: /scratch/kcarls36/data/symGenomes/reference_symbiont
 # Number of threads to use
 threads: 8
 
 
-# Project directory structure:
+# Example project directory structure:
+
 # Home directory:
 #├── README.md
 #├── data/
@@ -46,8 +53,12 @@ threads: 8
 # │   ├── rawfastq/
 # │   ├── trimfastq/
 # │   ├── symGenomes/
+# │       └── reference_symbiont
 # │   ├── symb_align/
 # │       └── bams
 # │   └── trimmed_noSymb/
+# │   └── kraken_db/
+# │   └── merged_unique/
+# │   └── de_novo_ref/
 # └── projects/
 #     └── stephanocoenia_FKNMS/
