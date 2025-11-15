@@ -3,29 +3,32 @@
 # IN PROGRESS 
 
 # Raw fastq file directory
-rawfq_dir:
+rawfq_dir: "/scratch/kcarls36/data/rawfastq"
 # Raw QC file output directory
-rawqc_dir:
+rawqc_dir: "/~/projects/stephanocoenia_FKNMS/results/rawqc"
 # Trimmed fastq file directory
-trimfq_dir:
+trimfq_dir: "/scratch/kcarls36/data/trimfastq"
 # Trimmed QC file output directory
-trimqc_dir:
+trimqc_dir: "/~/projects/stephanocoenia_FKNMS/results/trimmedqc"
 # Excluded symbiont trimmed fastq directory
-trimfq_noSymb_dir:
+trimfq_noSymb_dir: "/scratch/kcarls36/data/trimmed_noSymb"
+# Aligned symbiont bam directory
+symb_align_dir: "/scratch/kcarls36/data/symb_align/bams/"
+# Merged unique reads directory
+merge_dir: "/scratch/kcarls36/data/merged_unique"
 # Script directory
-scripts_dir:
+scripts_dir: "~/bin"
 # Symbiont genomes
- - 
- -
- -
+symbiont_genomes:
+ - genome1.fasta
+ - genome2.fasta
+ - genome3.fasta
 # Symbiont concatenated reference genome
-reference_symbiont:
+reference_symbiont: "~/projects/stephanocoenia_FKNMS/data/symGenomes/symbConcatGenome.fasta"
 # Symbiont alignments
-symb_align_dir:
-
-intersepta.ref:
-adapters:
-threads:
+symb_align_dir: "/scratch/kcarls36/data/symb_align"
+# Number of threads to use
+threads: 8
 
 
 # Project directory structure:
