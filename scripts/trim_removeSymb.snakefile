@@ -44,14 +44,13 @@ threads: config["threads"]
 
 # Get all FASTQ files and extract sample names
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
+print("Found samples:", SAMPLES)
 
 # Define final target(s)
 # Temprary rule_all for debugging
 rule all:
     input:
-        expand(f"{rawqc_dir}/{{sample}}_fastqc.html", sample=SAMPLES),
-        expand(f"{trimqc_dir}/{{sample}}_fastqc.html", sample=SAMPLES),
-        expand(f"{trimfq_noSymb_dir}/{{sample}}.fastq", sample=SAMPLES)
+        expand(f"{trimfq_dir}/{{sample}}.fastq", sample=SAMPLES)
 
 #############################################
 # RULES
@@ -66,52 +65,48 @@ rule fastqc_raw:
     input:
         f"{rawfq_dir}/{{sample}}.fastq"
     output:
+        f"{rawqc_dir}/{{sample}}_fastqc.zip",
         f"{rawqc_dir}/{{sample}}_fastqc.html"
     shell:
-        "fastqc {input} -o {output}"
+        "fastqc {input} -o {rawqc_dir}"
 
 # Multi-QC on raw reads
 rule multiqc_raw:
     input:
-        expand(f"{rawqc_dir}/{{sample}}_fastqc.html", sample=SAMPLES)
+        expand(f"{rawqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES)
     output:
         f"{rawqc_dir}/multiqc_report.html"
     shell:
-        "multiqc {rawqc_dir} -o {rawqc_dir}"
+        "multiqc {input} -o {rawqc_dir}"
 
-# Generate trimming commands using custom perl script
-rule make_trim_commands:
+# Trim using custom perl script
+# This step was already done before uploading to NCBI SRA, so this is just for reference.
+rule trim_dedup:
     input:
         f"{rawfq_dir}/{{sample}}.fastq"
     output:
-        f"{scripts_dir}/trims.sh"
+        f"{trimfq_dir}/{{sample}}.tr0"
     params:
-        site=".{12}CGA.{6}TGC.{12}|.{12}GCA.{6}TCG.{12}",
+        site= lambda wc: ".{12}CGA.{6}TGC.{12}|.{12}GCA.{6}TCG.{12}",
         adaptor="AGATC?",
-        sampleID=100, # This tells the script to name files from whole original file name
-        barcode="[ATGC]{4}"
+        sampleID=100,
+        barcode= lambda wc: "[ATGC]{4}"
     shell:
         """
-        perl {scripts_dir}/2bRAD_trim_launch_dedup.pl {input} \
-            site='{params.site}' \
-            adaptor='{params.adaptor}' \
-            sampleID='{params.sampleID}' \
-            barcode2='{params.barcode}' > {output}
+        perl {scripts_dir}/trim2bRAD_2barcodes_dedup.pl \
+        input={input} \
+        site="{params.site}" \
+        adaptor="{params.adaptor}" \
+        sampleID={params.sampleID} \
+        deduplicate=1 \
+        bc="{params.barcode}"
         """
 
-# Execute trimming commands
-rule execute_trims:
-    input:
-        f"{scripts_dir}/trims.sh"
-    output:
-        f"{trimfq_dir}/{{sample}}.tr0"
-    shell:
-        "bash {input}"
 
 # Quality filter with cutadapt
 rule quality_filter:
     input:
-        f"{trimfq_dir}/{{sample}}.tr0"
+        f"{rawfq_dir}/{{sample}}.fastq"
     output:
         f"{trimfq_dir}/{{sample}}.fastq"
     params:
