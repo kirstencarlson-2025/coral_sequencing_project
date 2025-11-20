@@ -2,7 +2,7 @@
 
 SRR_LIST="$1"	# Input file of SRR numbers, one per line
 OUTDIR="$2"	# Specify the name of the output directory to save files to
-LOGFILE="$3"	# The file to record SRR numbers successfully downloaded. This should match your original file.
+LOGFILE=$OUTDIR/log.txt	# The file to record SRR numbers successfully downloaded. This should match your original file.
 
 # Create directory to save output files in
 mkdir -p "$OUTDIR"
@@ -11,13 +11,14 @@ mkdir -p "$OUTDIR"
 > "$LOGFILE"
 
 # Loop through each accession
-while read -r SRR; do
+while IFS=',' read -r SRR SAMPLEID; do
+	OUTFILE="$OUTDIR/${SAMPLEID}.fastq"
 	# Downloads file into the output directory
-	if fasterq-dump "$SRR" -o "$OUTDIR/${SRR}.fastq"; then
+	if fasterq-dump "$SRR" -o $OUTFILE; then
 	# If successful, prints the SRR name to the log file
-		echo "$SRR" | tee -a "$LOGFILE"
+		echo "$SRR $SAMPLEID" | tee -a "$LOGFILE"
 	else
-		echo "Failed to download $SRR" | tee -a "$LOGFILE"
+		echo "Failed to download $SRR($SAMPLEID)" | tee -a "$LOGFILE"
 	fi
 done < "$SRR_LIST"
 
