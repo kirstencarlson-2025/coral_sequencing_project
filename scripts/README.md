@@ -6,7 +6,7 @@ Kirsten Carlson
 <br>processing 2b-RADseq reads. 
 <br>
 ## Tools needed
-I created a mamba environment to install/load these tools on.
+I created a mamba environment to install/load tools to.
 ```bash
 module load mamba/latest
 mamba create -n sint
@@ -40,7 +40,7 @@ Next, you can estimate download size required with vdb-dump
 ```bash
 bash download_size.sh 2bRAD_SRR_sampleID.csv
 ```
-Finally, download raw fastqs with the script ```download_fastq.sh```, the SRR_sampleID list, the output directory, and the logfile name to check successful download. Raw fastq files are named sampleID.fastq.
+Finally, download raw fastqs with the script ```download_fastq.sh```, the SRR_sampleID list, the output directory, and the logfile name to check successful download. Raw fastq files are named "sampleID.fastq".
 ```bash
 bash download_fastq.sh SRR/sampleIDlist outputDirectory
 ```
