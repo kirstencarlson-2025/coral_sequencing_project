@@ -2,7 +2,7 @@
 Kirsten Carlson
 <br>Version: 11/19/2025
 <br>
-<br>This document walks through the process of downloading raw fastq files from NCBI and processing
+<br>This document walks through the process of downloading raw fastq files from NCBI and
 <br>processing 2b-RADseq reads. 
 <br>
 ## Tools needed
