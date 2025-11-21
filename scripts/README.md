@@ -75,5 +75,23 @@ bash countreads.sh
 Total reads: 455539135
 ```
 I got the same number of reads as the raw fastqs, so it appears trimmed fastqs may have been what was uploaded to NCBI. Since the number of reads are the same, skip the trimmed fastqc/multiqc step. However, these rules are included in trim_removeSymb.snakefile if needed.
-## Remove contamination
+## De novo reference
+### Remove contamination
+First, you'll need to download Symbiodiniaceae genomes:
+```bash
+cd /scratch/user/data/symbgenomes
+wget http://symbs.reefgenomics.org/download/SymbC1.Genome.Scaffolds.fasta.gz
+wget http://smic.reefgenomics.org/download/Smic.genome.scaffold.final.fa.gz
+wget https://marinegenomics.oist.jp/symbd/download/102_symbd_genome_scaffold.fa.gz
+esearch -db assembly -query "GCA_000507305.1" | elink -target nuccore | efetch -format fasta > Breviolum_minutum.v1.0.genome.fa
+
+# Rename 2 for clarity:
+mv SymbC1.Genome.Scaffolds.fasta.gz Cladocopium_goreaui_Genome.Scaffolds.fasta.gz
+mv Smic.genome.scaffold.final.fa.gz Symbiodinium_microadriacticum_genome.scaffold.fasta.gz
+```
+Next, create a concatenated genome from all references:
+```bash
+snakemake -s trim_removeSymb.snakefile create_symb_reference
+```
+
 
