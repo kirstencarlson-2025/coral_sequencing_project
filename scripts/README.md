@@ -2,8 +2,7 @@
 Kirsten Carlson
 <br>Version: 11/19/2025
 <br>
-<br>This document walks through the process of downloading raw fastq files from NCBI and
-<br>processing 2b-RADseq reads. 
+<br>This document walks through the process of downloading raw fastq files from NCBI and processing 2b-RADseq reads. 
 <br>
 ## Setup
 I created a mamba environment to install/load tools to.
@@ -41,9 +40,7 @@ Next, you can estimate download size required with vdb-dump
 ```bash
 bash download_size.sh 2bRAD_SRR_sampleID.csv
 ```
-Finally, use the sbatch script to schedule the download via SLURM scheduler. 
-<br>By default, it loads mamba, but if you are using conda, be sure to edit the script.
-<br>The script ```download_fastq.sh``` uses SRR numbers to download fastq files. Raw fastq files are named "sampleID.fastq".
+Finally, use the sbatch script to schedule the download via SLURM scheduler. By default, it loads mamba, but if you are using conda, be sure to edit the script. The script ```download_fastq.sh``` uses SRR numbers to download fastq files. Raw fastq files are named "[sampleID].fastq".
 ```bash
 sbatch download_fastq.sbatch $mamba/conda_EnvironmentName $OutputDirectory $SRR_list
 ```
@@ -64,23 +61,19 @@ To run quality control, use the rules ```fastq_raw``` and ```multiqc_raw``` in t
 snakemake -s trim_removeSymb.snakefile multiqc_raw
 ```
 ## Trimming and quality filtering
-2bRAD sequencing has 2 barcodes, and is trimmed with the Matz lab perl script ```trim2bRAD_2barcodes_dedup.pl```. However,
-<br>this appears to have already been done. It is included in ```trim_removeSymb.snakefile``` if needed, though.
+2bRAD sequencing has 2 barcodes, and is trimmed with the Matz lab perl script ```trim2bRAD_2barcodes_dedup.pl```. However, this appears to have already been done. It is included in ```trim_removeSymb.snakefile``` if needed, though.
 <br>
-<br>To run quality filtering with cutadapt use the rule ```quality_filter```. The default is quality="15,15" minlen=36, but 
-<br>you can edit with ```--config```.
+<br>To run quality filtering with cutadapt use the rule ```quality_filter```. The default is quality="15,15" minlen=36, but you can edit with ```--config```.
 ```bash
 snakemake -s trim_removeSymb.snakefile quality_filter
 ```
-After quality filtering, use ```countreads.sh``` again.
+After quality filtering, run ```countreads.sh``` in the trimmed fastq directory.
 ```bash
 cd /scratch/user/data/trimmed_fastq
 bash countreads.sh
 
 Total reads: 455539135
 ```
-I got the same number of reads, so it appears trimmed fastqs may have been what was uploaded to NCBI. Since the number of
-<br>reads are the same, skip the trimmed fastqc/multiqc step. However, these steps are included in trim_removeSymb.snakefile
-<br>if needed.
+I got the same number of reads as the raw fastqs, so it appears trimmed fastqs may have been what was uploaded to NCBI. Since the number of reads are the same, skip the trimmed fastqc/multiqc step. However, these rules are included in trim_removeSymb.snakefile if needed.
 ## Remove contamination
 
