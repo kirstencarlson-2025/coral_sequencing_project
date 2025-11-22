@@ -13,6 +13,10 @@
 # CONFIG FILE
 ###############################################
 
+# Environment
+# config.yaml
+bowtie2_env: "/home/kcarls36/.conda/envs/get_data"
+
 # Raw fastq file directory
 rawfq_dir: "/scratch/kcarls36/projects/data/fastq_raw"
 # Raw QC file output directory

@@ -15,6 +15,8 @@
 
 # CONFIGURATION
 configfile: "config.yaml"
+# Environment
+bowtie2_env = config["bowtie2_env"]
 # Raw fastq file directory
 rawfq_dir = config["rawfq_dir"] 
 # Raw QC file output directory
@@ -144,11 +146,24 @@ rule create_symb_reference:
     input:
         config["symbiont_genomes"]
     output:
-        config["reference_symbiont"]
+        f"{config["reference_symbiont"]}.fasta"
     shell:
         """
         cat {input} > {output}
         """
+
+# Build bowtie2 index for symbiont reference genome
+rule index_symbiont_reference:
+    input:
+        fasta = f"{config['reference_symbiont']}.fasta",
+        index = f"{config['reference_symbiont']}"
+    output:
+        f"{config['reference_symbiont']}.1.bt2"
+    shell:
+        """
+        bowtie2-build {input.fasta} {input.index}
+        """
+
 
 # Align reads to symbiont reference genome
 rule align_symbiont:
