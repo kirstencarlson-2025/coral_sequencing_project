@@ -13,10 +13,6 @@
 # CONFIG FILE
 ###############################################
 
-# Environment
-# config.yaml
-bowtie2_env: "/home/kcarls36/.conda/envs/get_data"
-
 # Raw fastq file directory
 rawfq_dir: "/scratch/kcarls36/projects/data/fastq_raw"
 # Raw QC file output directory
@@ -35,10 +31,12 @@ sint_align_dir: "/scratch/kcarls36/projects/data/alignments/sint_align"
 merge_dir: "/scratch/kcarls36/projects/data/merged_unique"
 # De novo reference genome directory
 denovo_ref_dir: "/scratch/kcarls36/projects/data/merged_unique/de_novo_ref"
-# Kraken database directory
+# Standard Kraken database directory
+kraken_db_std: "/scratch/kcarls36/projects/data/kraken_db_standard"
+# Custom Kraken database directory
 kraken_db: "/scratch/kcarls36/projects/data/kraken_db"
 # Script directory
-scripts_dir: "/home/kcarls36/bin"
+scripts_dir: "/home/bin"
 # Symbiont genomes
 symbiont_genomes:
  - "/scratch/kcarls36/projects/data/symGenomes/Symbiodinium_microadriacticum_genome.scaffold.fasta"
@@ -49,6 +47,8 @@ symbiont_genomes:
 reference_symbiont: "/scratch/kcarls36/projects/data/symGenomes/reference_symbiont"
 # Number of threads to use
 threads: 8
+quality: "15,15"
+minlen: 36
 
 
 # Example project directory structure:
