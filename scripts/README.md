@@ -25,6 +25,7 @@ parallel-fastq-dump
 perl?
 pysradb
 snakemake
+bowtie2
 ```
 Lastly, most of the workflow is is processed by the Snakefile. Update the config to your preferences.
 ## Downloading raw fastqs from NCBI
@@ -93,5 +94,16 @@ Next, create a concatenated genome from all references:
 ```bash
 snakemake -s trim_removeSymb.snakefile create_symb_reference
 ```
-
+Index the concatenated reference:
+```bash
+snakemake -s trim_removeSymb.snakefile index_symbiont --cores 4
+```
+Align reads to reference:
+```bash
+snakemake -s trim_removeSymb.snakefile align_symbiont --cores 4
+```
+Exclude symbiont reads from trimmed fastq files:
+```bash
+snakemake -s trim_removeSymb.snakefile exclude_symbiont_reads --cores 4
+```
 
