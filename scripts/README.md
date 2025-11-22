@@ -79,7 +79,7 @@ If needed, run fastqc and multiqc on trimmed, quality-filtered reads. However, i
 ```bash
 snakemake -s trim_qc.smk multiqc_trimmed --cores 4
 ```
-## De novo reference
+## De novo reference *** UPDATE SNAKEFILE REFS
 ### Remove contamination
 First, you'll need to download Symbiodiniaceae genomes:
 ```bash
