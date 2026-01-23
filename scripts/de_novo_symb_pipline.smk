@@ -76,8 +76,9 @@ rule create_symb_reference:
 # Build bowtie2 index for symbiont reference genome
 rule index_symbiont_reference:
     input:
-        fasta = f"{config['reference_symbiont']}.fasta",
-        index = f"{config['reference_symbiont']}
+        fasta=f"{config['reference_symbiont']}.fasta",
+        index=f"{config['reference_symbiont']}",
+        conda="/home/kcarls36/.conda/envs/get_data"
     output:
         f"{config['reference_symbiont']}.1.bt2"
     shell:
@@ -86,26 +87,26 @@ rule index_symbiont_reference:
         """
      
 # Build bowtie2 index for symbiont reference genome
-rule index_symbiont:
-    input:
-        fasta=config['reference_symbiont'] + ".fasta"
-    output:
-        expand(f"{config['reference_symbiont']}.{{ext}}",
-               ext=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"])
-    conda:
-        config["bowtie2_env"]
-    run:
-        # strip .fasta from index prefix
-        index_prefix = input.fasta.rsplit('.',1)[0]
-        shell(f"module load mamba/latest \ source activate {conda} \ bowtie2-build {input.fasta} {index_prefix}")
-rule index_symbiont:
-    input:
-        fasta=f"{config['reference_symbiont']}.fasta"
-    output:
-        expand(f"{config['reference_symbiont']}.{{ext}}",
-               ext=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"])
-    shell:
-        f"bowtie2-build {input.fasta} {config['reference_symbiont']}"
+#rule index_symbiont:
+#    input:
+#        fasta=config['reference_symbiont'] + ".fasta"
+#    output:
+#        expand(f"{config['reference_symbiont']}.{{ext}}",
+#               ext=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"])
+#    conda:
+#        config["bowtie2_env"]
+#    run:
+#        # strip .fasta from index prefix
+#        index_prefix = input.fasta.rsplit('.',1)[0]
+#        shell(f"module load mamba/latest \ source activate {conda} \ bowtie2-build {input.fasta} {index_prefix}")
+#rule index_symbiont:
+#    input:
+#        fasta=f"{config['reference_symbiont']}.fasta"
+#    output:
+#        expand(f"{config['reference_symbiont']}.{{ext}}",
+#               ext=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"])
+#    shell:
+#        f"bowtie2-build {input.fasta} {config['reference_symbiont']}"
 ####################################### 
 
 

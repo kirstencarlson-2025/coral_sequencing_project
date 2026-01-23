@@ -13,7 +13,6 @@ source activate sint
 ```
 <br> These are the tools you'll need:
 ```bash
-# This needs to be edited
 python
 angsd
 cd-hit
@@ -22,7 +21,7 @@ htslib
 multiqc
 ngsrelate
 parallel-fastq-dump
-perl?
+perl
 pysradb
 snakemake
 ```

@@ -1,0 +1,52 @@
+Assuming unrestricted shared filesystem usage.
+host: sc015
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 4
+Rules claiming more threads will be scaled down.
+Job stats:
+job                         count
+------------------------  -------
+index_symbiont_reference        1
+total                           1
+
+Select jobs to execute...
+Execute 1 jobs...
+[Fri Jan 16 16:13:52 2026]
+localrule index_symbiont_reference:
+    input: /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.fasta, /scratch/kcarls36/projects/data/symGenomes/reference_symbiont, /home/kcarls36/.conda/envs/get_data
+    output: /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.1.bt2
+    jobid: 0
+    reason: Missing output files: /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.1.bt2
+    resources: tmpdir=/tmp
+RuleException:
+CalledProcessError in file "/home/kcarls36/projects/stephanocoenia_FKNMS/scripts/de_novo_symb_pipline.smk", line 85:
+Command 'set -euo pipefail;  
+        bowtie2-build /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.fasta /scratch/kcarls36/projects/data/symGenomes/reference_symbiont' returned non-zero exit status 247.
+[Fri Jan 16 16:14:32 2026]
+Error in rule index_symbiont_reference:
+    message: None
+    jobid: 0
+    input: /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.fasta, /scratch/kcarls36/projects/data/symGenomes/reference_symbiont, /home/kcarls36/.conda/envs/get_data
+    output: /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.1.bt2
+    shell:
+        
+        bowtie2-build /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.fasta /scratch/kcarls36/projects/data/symGenomes/reference_symbiont
+        
+        (command exited with non-zero exit code)
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look below for error messages
+[Fri Jan 16 16:14:32 2026]
+Error in rule index_symbiont_reference:
+    message: None
+    jobid: 0
+    input: /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.fasta, /scratch/kcarls36/projects/data/symGenomes/reference_symbiont, /home/kcarls36/.conda/envs/get_data
+    output: /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.1.bt2
+    shell:
+        
+        bowtie2-build /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.fasta /scratch/kcarls36/projects/data/symGenomes/reference_symbiont
+        
+        (command exited with non-zero exit code)
+Complete log(s): /home/kcarls36/projects/stephanocoenia_FKNMS/scripts/.snakemake/log/2026-01-16T161352.033369.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.
