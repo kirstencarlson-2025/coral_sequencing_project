@@ -1,3 +1,0 @@
-KeyError in file "/home/kcarls36/projects/stephanocoenia_FKNMS/scripts/de_novo_symb_pipline.smk", line 97:
-'bowtie2_env'
-  File "/home/kcarls36/projects/stephanocoenia_FKNMS/scripts/de_novo_symb_pipline.smk", line 97, in <module>

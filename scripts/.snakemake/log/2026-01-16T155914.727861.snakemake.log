@@ -1,8 +1,0 @@
-Assuming unrestricted shared filesystem usage.
-host: sc015
-Building DAG of jobs...
-MissingInputException in rule index_symbiont_reference in file "/home/kcarls36/projects/stephanocoenia_FKNMS/scripts/de_novo_symb_pipline.smk", line 77:
-Missing input files for rule index_symbiont_reference:
-    output: /scratch/kcarls36/projects/data/symGenomes/reference_symbiont.1.bt2
-    affected files:
-        home/kcarls36/.conda/envs/get_data
