@@ -1,4 +1,9 @@
 # IN PROGRESS
+# ------------------------------------------------ #
+# 2bRAD Trim and QC Snakefile
+# Kirsten Carlson
+# Updated 1/2026
+# ------------------------------------------------ #
 
 # This Snakefile runs the pipeline for processing 2bRAD data from Stephanocoenia intersepta samples.
 # This script removes symbiont reads and contamination with a custom kraken2 database, then constructs reads into a de novo reference genome. 
@@ -11,14 +16,10 @@
 #  - mergeUniq.pl
 #  - concatFasta.pl
 
-
-# Snakemake rule pipeline: 
-# unique_reads -> merge_unique_reads -> filter_tags -> tab_to_fasta -> cluster_tags -> kraken2_filter -> copy_denovo_ref -> construct_denovo_ref -> 
-# index_denovo_ref -> cleanup_denovo_intermediate
-
-#####################################################
+# ------------------------------------------------ #
 # CONFIGURATION
-######################################################
+# ------------------------------------------------ #
+
 
 configfile: "config.yaml"
 # Raw fastq file directory
@@ -56,11 +57,12 @@ rule all:
         f"{denovo_ref_dir}/cleanup.done"
 
 
-##############################
-# Create de novo reference
-##############################
+# ------------------------------------------------ #
+# Rules
+# ------------------------------------------------ #
 
 # Uniquing reads
+# ------------------------------------------------
 rule unique_reads:
     input:
         f"{trimfq_dir}/{{sample}}.fastq"
@@ -72,6 +74,7 @@ rule unique_reads:
         perl {scripts_dir}/uniquerOne.pl {input} > {output}
         """
 # Merge unique reads
+# ------------------------------------------------
 rule merge_unique_reads:
     input:
         expand(f"{merge_dir}/{{sample}}.uni", sample=SAMPLES)
@@ -84,6 +87,7 @@ rule merge_unique_reads:
         perl {scripts_dir}/mergeUniq.pl {input} minInd={params.minInd}  > {output}
         """
 # Filter tags based on quality and count
+# ------------------------------------------------
 rule filter_tags:
     input:
         f"{merge_dir}/all.uniq"
@@ -94,6 +98,7 @@ rule filter_tags:
         awk '!($3>7 && $4==0) && $2!="seq"' {input} > {output}
         """
 # Convert filtered tags to fasta format
+# ------------------------------------------------
 rule tab_to_fasta:
     input:
         f"{merge_dir}/all.tab"
@@ -105,6 +110,7 @@ rule tab_to_fasta:
         """
 
 # Cluster filtered tags with CD-HIT
+# ------------------------------------------------
 rule cluster_tags: 
     input:
         f"{merge_dir}/all.fasta"
@@ -120,6 +126,7 @@ rule cluster_tags:
 # Remove contamination with Kraken2
 # You can create a custom kraken2 database including Symbiodiniaceae genomes with this script from https://github.com/kirstencarlson-2025:
 # krakendb.sh
+# ------------------------------------------------
 rule kraken2_filter:
     input:
         f"{merge_dir}/cdh_alltags.fas"
@@ -133,6 +140,7 @@ rule kraken2_filter:
         """
     
 # Copy and rename unclassified cdh tags as de novo reference genome
+# ------------------------------------------------
 rule copy_denovo_ref:
     input:
         f"{merge_dir}/cdh_alltags.unclass.fa"
@@ -143,6 +151,7 @@ rule copy_denovo_ref:
         cp {input} {output}
         """
 # Construct de novo refernece with 30 psuedo chromosomes
+# ------------------------------------------------
 rule construct_denovo_ref:
     input:
         f"{denovo_ref_dir}/sint_denovo.fa"
@@ -157,7 +166,8 @@ rule construct_denovo_ref:
         perl {params.script} fasta={input} num_chr={params.num_chr}
         """
 
-# Format and index de novo reference genome with bwa and samtools
+# Format and index de novo reference genome with bowtie2 and samtools
+# ------------------------------------------------
 rule index_denovo_ref:
     input:
         f"{denovo_ref_dir}/sint_denovo_cc.fa"
@@ -165,11 +175,13 @@ rule index_denovo_ref:
         touch(f"{denovo_ref_dir}/sint_denovo_cc.fa.bwt")
     shell:
         """
-        bwa index {input}
+        bowtie
+        bowtie2 index {input}
         samtools faidx {input}
         touch {output}
         """
 # Final cleanup of de novo reference intermediate files
+# ------------------------------------------------
 rule cleanup_denovo_intermediate:   
     input:
         fasta = f"{denovo_ref_dir}/sint_denovo_cc.fa",

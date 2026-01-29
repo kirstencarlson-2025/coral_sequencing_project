@@ -1,7 +1,7 @@
 #!/bin/bash
 # WHAT: uses entrez-direct package to search for SRA runs using PRJNA accession number, then saves in csv file. 
 # Searches for SRR numbers and saves in seperate 2bRAD and ITS2 files
-# Must have entrez-direct package installed. For Kirsten, use: source activate get_data
+# Must have entrez-direct package installed.
 
 # Set variables
 PRJNA=$1     #PRJNA accession number

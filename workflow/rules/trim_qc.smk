@@ -1,8 +1,8 @@
-###################################################
+# ------------------------------------------------ #
 # 2bRAD Trim and QC Snakefile
 # Kirsten Carlson
 # Updated 11/2025
-###################################################
+# ------------------------------------------------ #
 
 # This Snakefile runs the pipeline for processing 2bRAD data. Processing produces trimmed, deduplicated reads.
 
@@ -11,14 +11,13 @@
 #  - 2bRAD_trim_launch_dedup.pl
 #  - trim2bRAD_2barcodes_dedup.pl
 
-# Snakemake rule pipeline: 
-# fastqc_raw -> multiqc_raw -> trim_dedup -> quality_filter -> fastqc_trimmed -> multiqc_trimmed
-
-#####################################################
+# ------------------------------------------------ #
 # CONFIGURATION
-######################################################
+# ------------------------------------------------ #
 
 configfile: "config.yaml"
+# Conda environment
+env: config["env"]
 # Raw fastq file directory
 rawfq_dir = config["rawfq_dir"] 
 # Raw QC file output directory
@@ -30,7 +29,9 @@ trimqc_dir = config["trimqc_dir"]
 # Script directory
 scripts_dir = config["scripts_dir"]
 # Number of threads to use
-threads: config["threads"]  
+threads = config["threads"] 
+quality = config["quality"]
+minlen = config["minlen"] 
 
 # Get all FASTQ files and extract sample names
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
@@ -41,15 +42,12 @@ rule all:
     input:
         f"{trimqc_dir}/multiqc_report.html"
 
-#############################################
+# ------------------------------------------------ #
 # RULES
-#############################################
-
-##############################
-# Raw reads quality control
-##############################
+# ------------------------------------------------ #
 
 # Initial fastqc on raw reads
+# ------------------------------------------------ 
 rule fastqc_raw:
     input:
         f"{rawfq_dir}/{{sample}}.fastq"
@@ -60,6 +58,7 @@ rule fastqc_raw:
         "fastqc {input} -o {rawqcq_dir}"
 
 # Multi-QC on raw reads
+# ------------------------------------------------ 
 rule multiqc_raw:
     input:
         expand(f"{rawqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES)
@@ -68,12 +67,10 @@ rule multiqc_raw:
     shell:
         "multiqc {input} -o {rawqc_dir}"
 
-##############################
-# Trimming and quality filtering
-##############################
 
 # Trim using custom perl script
 # This step appears to have already been done before uploading to NCBI SRA, so this is just for reference.
+# ------------------------------------------------
 rule trim_dedup:
     input:
         f"{rawfq_dir}/{{sample}}.fastq"
@@ -98,6 +95,7 @@ rule trim_dedup:
 # Quality filter with cutadapt
 # If you need to run trim2bRAD_2barcodes_dedup.pl, run this rule after that step, changing input to the trimmed output file (.tr0).
 # This step appears to have already been done before uploading to NCBI SRA, so this is just for reference.
+# ------------------------------------------------
 rule quality_filter:
     input:
         f"{rawfq_dir}/{{sample}}.fastq"
@@ -111,25 +109,24 @@ rule quality_filter:
         cutadapt -q {params.quality} -m {params.minlen} -o {output} {input}
         """
 
-##############################
-# Trimmed reads quality control
-##############################
-
 # Run fastqc on trimmed reads
 # Above step did not trim or remove any reads, so this is just for reference.
+# ------------------------------------------------
 rule fastqc_trimmed:
     input:
         f"{trimfq_dir}/{{sample}}.fastq"
     output:
-        f"{trimqc_dir}/{{sample}}_fastqc"
+        f"{trimqc_dir}/{{sample}}_fastqc.zip",
+        f"{trimqc_dir}/{{sample}}_fastqc.html"
     shell:
-        "fastqc {input} -o {output}"
+        "fastqc {input} -o {trimqc_dir}"
 
 # Multi-QC on trimmed reads
 # Above step did not trim or remove any reads, so this is just for reference.
+# ------------------------------------------------
 rule multiqc_trimmed:   
     input:
-        expand(f"{trimqc_dir}/{{sample}}_fastqc", sample=SAMPLES)
+        expand(f"{trimqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES)
     output:
         f"{trimqc_dir}/multiqc_report.html"
     shell:
