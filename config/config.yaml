@@ -13,8 +13,12 @@
 # CONFIG FILE
 ###############################################
 
+# Project PRJNA number
+prjna: "PRJNA884416"
 # Conda environment
 env: "/home/kcarls36/.conda/envs/bowtie2.yaml"
+# Resource directory (SRR numbers, run info)
+resource_dir: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources"
 # Raw fastq file directory
 rawfq_dir: "/scratch/kcarls36/projects/data/fastq_raw"
 # Raw QC file output directory

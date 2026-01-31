@@ -19,7 +19,12 @@
 # CONFIGURATION
 # ------------------------------------------------ #
 
-configfile: "config.yaml"
+configfile: "../config/config.yaml"
+include: "rules/metadata.smk"
+# PRJNA accession number
+prjna = config["prjna"]
+# Conda environment
+env: config["env"]
 # Raw fastq file directory
 rawfq_dir = config["rawfq_dir"] 
 # Raw QC file output directory
@@ -28,12 +33,32 @@ rawqc_dir = config["rawqc_dir"]
 trimfq_dir = config["trimfq_dir"] 
 # Trimmed QC file output directory
 trimqc_dir = config["trimqc_dir"] 
+# Excluded symbiont trimmed fastq directory
+trimfq_noSymb_dir = config["trimfq_noSymb_dir"] 
+# Merged unique reads directory
+merge_dir = config["merge_dir"] 
+# Aligned symbiont bam directory
+symb_align_dir = config["symb_align_dir"]
+# Kraken database directory
+kraken_db_std = config["kraken_db_std"]
+# De novo reference genome directory
+denovo_ref_dir = config["denovo_ref_dir"]
+# Script directory
+scripts_dir = config["scripts_dir"] 
+# Symbiont genomes
+symbiont_genomes = config["symbiont_genomes"]
+# Symbiont concatenated reference genome
+reference_symbiont = config["reference_symbiont"] 
 # Script directory
 scripts_dir = config["scripts_dir"]
 # Number of threads to use
 threads = config["threads"] 
 quality = config["quality"]
-minlen = config["minlen"] 
+minlen = config["minlen"]  
+
+# Only include download rules if the file already exists
+if os.path.exists("resources/srr_2brad_list.txt"):
+    include: "rules/download.smk"
 
 # Get all FASTQ files and extract sample names
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
