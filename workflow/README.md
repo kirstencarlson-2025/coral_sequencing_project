@@ -1,68 +1,36 @@
 # 2b-RAD population genetics: *Stephanocoenia intersepta*
 Kirsten Carlson
-<br>Updated: 11/19/2025
+<br>Updated: 1/2026
 <br>
-<br>This document walks through the process of downloading raw fastq files from NCBI and processing 2b-RADseq reads. 
+<br>This workflow uses Snakemake to process 2bRAD sequencing reads from raw data to analysis-ready files. It includes downloading FASTQs from NCBI, trimming and quality control of reads, filtering symbiont sequences, and preparing data for population genetic analyses using INDELs as markers.
 <br>
 <details>
   <summary><strong>Setup</strong></summary>  
-I created a mamba environment to install/load tools to.
+First, be sure snakemake is installed. I created a mamba environment to install/load tools to.
   
 ```bash
 module load mamba/latest
-mamba create -n sint
-source activate sint
+mamba create -n snakemake
+source activate snakemake
+conda install bioconda::snakemake
 ```
 
-<br> These are the tools you'll need:
-```bash
-python
-angsd
-cd-hit
-entrez-direct
-htslib
-multiqc
-ngsrelate
-parallel-fastq-dump
-perl
-pysradb
-snakemake
-bowtie2
-```
-Lastly, most of the workflow is is processed by the Snakefile. Update the config to your preferences.
+The tools needed for the workflow are included in "/workflow/envs/env.yaml", which will install the first time you run snakemake.
+
+Lastly, update the config file ("/config/config.yaml") to your naming and directory structure preferences.
 </details>
 
 <details>
   <summary><strong>Downloading raw fastqs </strong></summary>
-First, this script uses the PRJNA accession number to get all SRR numbers and sampleIDs and save them to a csv file (one per line). SRR numbers are split into two files, one for 2bRAD fastqs and one for ITS2 fastqs. SampleIDs will be used for naming to match metadata.
-  
-```bash
-bash get_SRR.sh $PRJNA# $OutputDirectory $OutputfileName
-```
-
-Example:
+In "/workflow/rules", this step includes "metadata.smk" and "download.smk". To begin, "metadata.smk" creates a text file including the SRR number and the SampleID number and saves it to "/resources". However, in this dataset there were three field triplicates that do not carry over the SampleID designation. I manually edited the text file using the NCBI database to update the SampleID numbers, and the file can be found in "resources/sample_rename.csv". You can use this to rename samples after downloading.
+<br>
+<br> If you'd like to estimate download size required, run:
 
 ```bash
-bash get_SRR.sh PRJNA884416 /scratch/user/data/srr_numbers SRR_sampleID.csv
+bash download_size.sh srr_2brad_list.txt
 ```
 
-Next, you can estimate download size required with vdb-dump
-
-```bash
-bash download_size.sh 2bRAD_SRR_sampleID.csv
-```
-
-Finally, use the sbatch script to schedule the download via SLURM scheduler. By default, it loads mamba, but if you are using conda, be sure to edit the script. The script ```download_fastq.sh``` uses SRR numbers to download fastq files. Raw fastq files are named "[sampleID].fastq".
-
-```bash
-sbatch download_fastq.sbatch $mamba/conda_EnvironmentName $OutputDirectory $SRR_list
-```
-
-Example:
-
-```bash
-sbatch --mail-user=user@example.com download_fastq.sbatch download /scratch/user/data/raw_fastq 2bRAD_SRR_sampleID.csv
-```
+The "download.smk" rule will download raw fastq files using the SRR numbers from the list, and name the files "[SampleID].fastq".
 
 Check how many reads with ```countreads.sh``` by navigating to raw fastq directory and running in command line.
 
