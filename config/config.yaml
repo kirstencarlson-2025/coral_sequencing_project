@@ -17,6 +17,10 @@
 prjna: "PRJNA884416"
 # Conda environment
 env: "/home/kcarls36/.conda/envs/bowtie2.yaml"
+# List of 2bRAD srr numbers and sample IDs
+srr_2brad_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/srr_2brad_list.txt"
+# List of ITS2 srr numbers and sample IDs
+srr_its2_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/srr_its2_list.txt"
 # Resource directory (SRR numbers, run info)
 resource_dir: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources"
 # Raw fastq file directory
@@ -51,8 +55,6 @@ symbiont_genomes:
  - "/scratch/kcarls36/projects/data/symGenomes/102_symbd_genome_scaffold.fa"
 # Symbiont concatenated reference genome
 reference_symbiont: "/scratch/kcarls36/projects/data/symGenomes/reference_symbiont"
-# Number of threads to use
-threads: 8
 quality: "15,15"
 minlen: 36
 
@@ -60,13 +62,18 @@ minlen: 36
 # Example project directory structure:
 
 # Home directory:
-#├── README.md
-#├── data/
-#│   └── SRR_numbers/
-#│       └── README.md
-#├── metadata/
-#├── results/
-#└── scripts/
+# ├── .gitignore
+# ├── README.md
+# ├── workflow
+# │   ├── rules
+# │   ├── envs
+# │   ├── scripts
+# │   ├── report
+# |   └── Snakefile
+# ├── config
+# │   ├── config.yaml
+# ├── results
+# └── resources
 
 # Scratch directory:
 # ├── data/

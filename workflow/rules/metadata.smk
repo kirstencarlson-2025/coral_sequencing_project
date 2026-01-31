@@ -1,7 +1,7 @@
 # ------------------------------------------------ #
 # 2bRAD Get Metadata Snakefile
 # Kirsten Carlson
-# Updated 11/2025
+# Updated 1/2026
 # ------------------------------------------------ #
 
 # This Snakefile gets SRR numbers from PRJNA accession number.
@@ -18,10 +18,6 @@ env = config["env"]
 # Resource directory (SRR numbers, run info)
 resource_dir = config["resource_dir"]
 
-rule all_metadata:
-    input:
-        f"{resource_dir}/srr_2brad_list.txt",
-        f"{resource_dir}/srr_its2_list.txt"
 
 # ------------------------------------------------ #
 # RULES

@@ -8,7 +8,6 @@
 
 # Scripts needed for this pipeline:
 # From https://github.com/z0on/2bRAD_denovo
-#  - 2bRAD_trim_launch_dedup.pl
 #  - trim2bRAD_2barcodes_dedup.pl
 
 # ------------------------------------------------ #
@@ -37,10 +36,6 @@ minlen = config["minlen"]
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
 print("Found samples:", SAMPLES)
 
-# Define final target(s)
-rule all:
-    input:
-        f"{trimqc_dir}/multiqc_report.html"
 
 # ------------------------------------------------ #
 # RULES
