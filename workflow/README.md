@@ -46,7 +46,7 @@ Total reads: 455539135
   <summary><strong>Trimming and quality filtering</strong></summary>
 
 ## Quality control with fastqc and multiqc
-The rule ```trime_qc.smk``` will run quality control. The rules ```fastq_raw``` and ```multiqc_raw``` will create a quality control summary of the raw fastqs.
+The rule ```trim_qc.smk``` will run quality control. First, ```fastq_raw``` and ```multiqc_raw``` will create a quality control summary of the raw fastqs.
 <br>
 <br>2bRAD sequencing has 2 barcodes, and can be trimmed with the Matz lab perl script ```trim2bRAD_2barcodes_dedup.pl``` using the snakemake rule ```trim_dedup```. However, this appears to have already been done. It is included if needed, though.
 <br>
@@ -71,35 +71,26 @@ First, you'll need to download Symbiodiniaceae genomes:
 
 ```bash
 cd /scratch/user/data/symbgenomes
-wget http://symbs.reefgenomics.org/download/SymbC1.Genome.Scaffolds.fasta.gz
-wget http://smic.reefgenomics.org/download/Smic.genome.scaffold.final.fa.gz
+wget http://symbs.reefgenomics.org/download/SymbC1.Genome.Scaffolds.fasta.gz > Cladocopium_goreaui_Genome.Scaffolds.fasta.gz
+wget http://smic.reefgenomics.org/download/Smic.genome.scaffold.final.fa.gz > Symbiodinium_microadriacticum_genome.scaffold.fasta.gz
 wget https://marinegenomics.oist.jp/symbd/download/102_symbd_genome_scaffold.fa.gz
 esearch -db assembly -query "GCA_000507305.1" | elink -target nuccore | efetch -format fasta > Breviolum_minutum.v1.0.genome.fa
-
-# Rename 2 for clarity:
-mv SymbC1.Genome.Scaffolds.fasta.gz Cladocopium_goreaui_Genome.Scaffolds.fasta.gz
-mv Smic.genome.scaffold.final.fa.gz Symbiodinium_microadriacticum_genome.scaffold.fasta.gz
 ```
 
-Next, create a concatenated genome from all references:
-
-```bash
-snakemake -s trim_qc.smk create_symb_reference --cores 4
-```
-
-Index the concatenated reference:
-
-```bash
-snakemake -s  trim_qc.smk index_symbiont --cores 4
-```
-
-Align reads to reference:
-
-```bash
-snakemake -s  trim_qc.smk align_symbiont --cores 4
-```
-Exclude symbiont reads from trimmed fastq files:
-```bash
-snakemake -s  trim_qc.smk exclude_symbiont_reads --cores 4
-```
+The rule ```de_novo_symb_pipeline.smk``` aligns reads to the concatenated symbiont genomes to remove any symbiont reads, then a standard ```kraken2``` database removes any remaining contamination. Finally, the reads are constructed into a de novo reference genome.
+<br>
+<br>Rules in this snakefile include:
+<br>```create_symb_reference``` (concatenates symbiont genomes)
+<br>```index_symbiont_reference``` (indexes the concatenated genome)
+<br>```map_symbiont``` (aligns read to symbiont reference)
+<br>```exlude_symbiont_reads``` (excludes any reads that align to the symbiont reference)
+<br>```unique_reads``` (uses uniquerOne.pl to unique reads)
+<br>```merge_unique_reads``` (merges the uniqued reads)
+<br>```filter_tags``` (filters tags based on quality and count)
+<br>```tab_to_fasta``` (converts filtered tags to fasta format)
+<br>```cluster_tags``` (cluster the filtered tags with ```CD-HIT```)
+<br>```kraken2_filter``` (removes contamination with ```kraken2``` standard database)
+<br>```construct_denovo_ref``` (construct de novo reference with 30 psuedo chromosomes)
+<br>```index_denovo_ref``` (index de novo reference)
+<br>```cleanup_denovo_intermediates``` (final cleanup of de novo intermediate files)
 
