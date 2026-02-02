@@ -22,7 +22,7 @@ Lastly, update the config file ("/config/config.yaml") to your naming and direct
 
 <details>
   <summary><strong>Downloading raw fastqs </strong></summary>
-In "/workflow/rules", this step includes "metadata.smk" and "download.smk". To begin, "metadata.smk" creates a text file including the SRR number and the SampleID number and saves it to "/resources". However, in this dataset there were three field triplicates that do not carry over the SampleID designation. I manually edited the text file using the NCBI database to update the SampleID numbers, and the file can be found in "resources/sample_rename.csv". You can use this to rename samples after downloading.
+In "/workflow/rules", this step includes "metadata.smk" and "download.smk". To begin, "metadata.smk" creates a text file including the SRR number and the SampleID number and saves it to "/resources". However, in this dataset there were three field triplicates that do not carry over the SampleID designation. I manually edited the text file using the NCBI database to update the SampleID numbers, and the file can be found in "resources/sample_rename.csv". You can edit the snakefile rule to use this list to download and name files.
 <br>
 <br> If you'd like to estimate download size required, run:
 
@@ -46,34 +46,21 @@ Total reads: 455539135
   <summary><strong>Trimming and quality filtering</strong></summary>
 
 ## Quality control with fastqc and multiqc
-To run quality control, use the rules ```fastq_raw``` and ```multiqc_raw``` in the Snakefile ``` trim_qc.smk```
-
-```bash
-snakemake -s trim_qc.smk multiqc_raw --cores 4
-```
-  
-2bRAD sequencing has 2 barcodes, and can be trimmed with the Matz lab perl script ```trim2bRAD_2barcodes_dedup.pl```. However, this appears to have already been done. It is included in ``` trim_qc.smk``` if needed, though.
+The rule ```trime_qc.smk``` will run quality control. The rules ```fastq_raw``` and ```multiqc_raw``` will create a quality control summary of the raw fastqs.
 <br>
-<br>To run quality filtering with cutadapt use the rule ```quality_filter```. The default is quality="15,15" minlen=36, but you can edit with ```--config```.
-  
-```bash
-snakemake -s trim_qc.smk quality_filter --cores 4
-```
-
-After quality filtering, run ```countreads.sh``` in the trimmed fastq directory.
+<br>2bRAD sequencing has 2 barcodes, and can be trimmed with the Matz lab perl script ```trim2bRAD_2barcodes_dedup.pl``` using the snakemake rule ```trim_dedup```. However, this appears to have already been done. It is included if needed, though.
+<br>
+<br>The rule ```quality_filter``` runs quality filtering with ```cutadapt```. The default is quality="15,15" minlen=36, which you can edit in the config file.
+<br>
+<br>After quality filtering, run ```countreads.sh``` in the trimmed fastq directory.
 
 ```bash
-cd /scratch/user/data/trimmed_fastq --cores 4
+cd /scratch/user/data/trimmed_fastq
 bash countreads.sh
 
 Total reads: 455539135
 ```
-
-If needed, run fastqc and multiqc on trimmed, quality-filtered reads.
-
-```bash
-snakemake -s trim_qc.smk multiqc_trimmed --cores 4
-```
+Lastly, ```trim_qc.smk``` runs quality control again on the trimmed and quality filtered fastqs.
 </details>
 
 <details>
