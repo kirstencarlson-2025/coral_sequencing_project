@@ -66,7 +66,6 @@ Lastly, ```trim_qc.smk``` runs quality control again on the trimmed and quality 
 <details>
   <summary><strong>De novo reference</strong></summary>
 
-### Remove contamination
 First, you'll need to download Symbiodiniaceae genomes:
 
 ```bash
