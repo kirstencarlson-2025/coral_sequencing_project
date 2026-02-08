@@ -1,0 +1,12 @@
+executor: slurm
+
+jobs: 10
+
+use-conda: true
+
+default-resources: 
+ - mem_mb=4000
+ - cpus=1
+ - runtime=240
+ - slurm_account=grp_aahowel3
+ - slurm_partition=public

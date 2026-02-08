@@ -5,7 +5,7 @@
 # Project PRJNA number
 prjna: "PRJNA884416"
 # Conda environment
-env: "/home/kcarls36/.conda/envs/env.yaml"
+env: "/home/kcarls36/projects/stephanocoenia_FKNMS/workflow/envs/env.yaml"
 # List of 2bRAD srr numbers and sample IDs
 srr_2brad_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/srr_2brad_list.txt"
 # List of ITS2 srr numbers and sample IDs
@@ -35,7 +35,7 @@ kraken_db_std: "/scratch/kcarls36/projects/data/kraken_db_standard"
 # Custom Kraken database directory
 kraken_db: "/scratch/kcarls36/projects/data/kraken_db"
 # Script directory
-scripts_dir: "/home/bin"
+scripts_dir: "/home/kcarls36/bin"
 # Symbiont genomes
 symbiont_genomes:
  - "/scratch/kcarls36/projects/data/symGenomes/Symbiodinium_microadriacticum_genome.scaffold.fasta"
@@ -44,6 +44,9 @@ symbiont_genomes:
  - "/scratch/kcarls36/projects/data/symGenomes/102_symbd_genome_scaffold.fa"
 # Symbiont concatenated reference genome
 reference_symbiont: "/scratch/kcarls36/projects/data/symGenomes/reference_symbiont"
+# De novo reference genome
+denovo_ref_basename: "sint_denovo"
+
 quality: "15,15"
 minlen: 36
 

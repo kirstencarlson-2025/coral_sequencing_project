@@ -21,9 +21,9 @@
 # CONFIGURATION
 # ------------------------------------------------ #
 
-configfile: "config.yaml"
+configfile: "../../config/config.yaml"
 # Conda environment
-env: config["env"]
+env = config["env"]
 # Raw fastq file directory
 rawfq_dir = config["rawfq_dir"] 
 # Raw QC file output directory
@@ -47,14 +47,24 @@ scripts_dir = config["scripts_dir"]
 # Symbiont genomes
 symbiont_genomes = config["symbiont_genomes"]
 # Symbiont concatenated reference genome
-reference_symbiont = config["reference_symbiont"]    
+reference_symbiont = config["reference_symbiont"] 
+# De novo reference genome
+denovo_ref_basename = config["denovo_ref_basename"]   
 
 # Get all FASTQ files and extract sample names
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
 
+# Which rules to run locally
+local_rules = ["create_symb_reference",
+                "filter_tags",
+                "tab_to_fasta",
+                "rename_denovo_ref",
+                "construct_denovo_ref",
+                "cleanup_denovo_intermediate"]
+
 rule all:
     input:
-        f"{denovo_ref_dir}/cleanup.done"
+       f"{denovo_ref_dir}/cleanup.done"
 
 # ------------------------------------------------ #
 # Rules
@@ -93,7 +103,7 @@ rule index_symbiont_reference:
         config["env"]
     shell:
         """
-        bowtie2-build --threads {threads}{input.fasta} {params.basename}
+        bowtie2-build --threads {threads} {input.fasta} {params.basename}
         """
 
 
@@ -102,39 +112,29 @@ rule index_symbiont_reference:
 rule map_symbiont:
     input:
         fq = f"{trimfq_dir}/{{sample}}.fastq",
-        index_prefix = config["reference_symbiont"]
+        index = f"{config["reference_symbiont"]}.1.bt2"
     output:
         sam = f"{symb_align_dir}/{{sample}}_symb.sam",
         aligned = f"{symb_align_dir}/{{sample}}_symb.fastq",
         unaligned = f"{trimfq_noSymb_dir}/{{sample}}.fastq"
+    params:
+        index_prefix = {config['reference_symbiont']}
     threads: 4
     resources:
-        mem_mb = 16000
+        mem_mb=16000
+    conda:
+        config["env"]
     shell:
         """
         bowtie2 \
           --score-min L,16,1 --local -L 16 \
-          -x {input.index_prefix} \
+          -x {params.index_prefix} \
             -U {input.fq} \
             --no-unal \
             --al {output.aligned} \
             --un {output.unaligned} \
             -S {output.sam} \
             -p {threads}
-        """
-
-# Exclude reads that align to symbiont genomes
-# ------------------------------------------------ 
-rule exclude_symbiont_reads:
-    input:
-        fq = f"{trimfq_dir}/{{sample}}.fastq",
-        symb_bam = f"{symb_align_dir}/{{sample}}_symb.bam"
-    output:
-        f"{trimfq_noSymb_dir}/{{sample}}.fastq"
-    shell:
-        """
-        samtools view -b -f 4 {input.symb_bam} | \
-        samtools fastq - > {output}
         """
 
 # Uniquing reads
@@ -144,10 +144,14 @@ rule unique_reads:
         f"{trimfq_noSymb_dir}/{{sample}}.fastq"
     output:
        f"{merge_dir}/{{sample}}.uni"
-    threads: config["threads"]
+    conda:
+        config["env"]
+    threads: 1
+    resources:
+        mem_mb=16000
     shell:
         """
-        perl {scripts_dir}/uniquerOne.pl {input} > {output}
+       {scripts_dir}/uniquerOne.pl {input} > {output}
         """
 
 # Merge unique reads
@@ -158,10 +162,15 @@ rule merge_unique_reads:
     output:
         f"{merge_dir}/all.uniq"
     params:
+        suffix= "uni",
         minInd = 30
+    threads: 1
+    resources:
+        mem_mb=200000
     shell:
         """
-        perl {scripts_dir}/mergeUniq.pl {input} minInd={params.minInd}  > {output}
+        cd {merge_dir}
+        {scripts_dir}/mergeUniq.pl {params.suffix} minInd={params.minInd}  > all.uniq
         """
 
 # Filter tags based on quality and count
@@ -196,8 +205,9 @@ rule cluster_tags:
     output:
         f"{merge_dir}/cdh_alltags.fas"
     params:
-        identity = 0.91,
-        mem_mb = 12000
+        identity=0.91
+    resources:
+        mem_mb=200000
     shell:
         """
         cd-hit-est -i {input} -o {output} -c {params.identity} -aL 1 -aS 1 -g 1 -T 0 -M 0
@@ -209,65 +219,80 @@ rule kraken2_filter:
     input:
         f"{merge_dir}/cdh_alltags.fas"
     output:
-        f"{merge_dir}/cdh_alltags.unclass.fa"
+        unclass = f"{merge_dir}/cdh_alltags.unclass.fa",
+        report = f"{merge_dir}/kraken_report.txt"
     params:
-        kraken_db_std = config["kraken_db_std"],
-        mem_mb = 50000
+        kraken_db_std = config["kraken_db_std"]
+    threads: 8
+    resources:
+        mem_mb=200000
+    conda:
+        config["env"]
     shell:
         """
-        kraken2 --db {params.kraken_db_std} --output /dev/null --report {merge_dir}/kraken_report.txt --unclassified-out {output} {input}
+        kraken2 --threads {threads} --db {params.kraken_db_std} --output /dev/null --report {output.report} --unclassified-out {output.unclass} {input} 
         """
-    
-# Copy and rename unclassified cdh tags as de novo reference genome
-# ------------------------------------------------ 
-rule copy_denovo_ref:
+
+# Copy and rename de novo reference genome
+# ------------------------------------------------
+rule rename_denovo_ref:
     input:
         f"{merge_dir}/cdh_alltags.unclass.fa"
     output:
-        f"{denovo_ref_dir}/sint_denovo.fa"
+        f"{denovo_ref_dir}/{denovo_ref_basename}.fa"
     shell:
         """
         cp {input} {output}
-        """
+        """ 
 
-# Construct de novo refernece with 30 psuedo chromosomes
+# Construct de novo reference with 30 psuedo chromosomes
 # ------------------------------------------------ 
 rule construct_denovo_ref:
     input:
-        f"{denovo_ref_dir}/sint_denovo.fa"
+        f"{denovo_ref_dir}/{denovo_ref_basename}.fa"
     output:
-        fasta = f"{denovo_ref_dir}/sint_denovo_cc.fa",
-        tab = f"{denovo_ref_dir}/sint_denovo_cc.tab"
+        fasta = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta",
+        tab = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.tab"
     params:
-        num_chr = 30,
-        script = f"{scripts_dir}/concatFasta.pl"
+        num_chr=30
     shell:
         """
-        perl {params.script} fasta={input} num_chr={params.num_chr}
+        {scripts_dir}/concatFasta.pl fasta={input} num={params.num_chr}
         """
 
-# Format and index de novo reference genome with bwa and samtools
+# Format and index de novo reference genome
 # ------------------------------------------------ 
 rule index_denovo_ref:
     input:
-        f"{denovo_ref_dir}/sint_denovo_cc.fa"
+        f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta"
     output:
-        touch(f"{denovo_ref_dir}/sint_denovo_cc.fa.bwt")
+        f"{denovo_ref_dir}/{denovo_ref_basename}_cc.1.bt2",
+        f"{denovo_ref_dir}/{denovo_ref_basename}_cc.2.bt2",
+        f"{denovo_ref_dir}/{denovo_ref_basename}_cc.3.bt2",
+        f"{denovo_ref_dir}/{denovo_ref_basename}_cc.4.bt2",
+        f"{denovo_ref_dir}/{denovo_ref_basename}_cc.rev.1.bt2",
+        f"{denovo_ref_dir}/{denovo_ref_basename}_cc.rev.2.bt2",
+        f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta.fai"
+    threads: 4
+    resources:
+        mem_mb=32000
+    conda:
+        config["env"]
     params:
-        mem_mb = 16000
+        basename=f"{denovo_ref_dir}/{denovo_ref_basename}_cc"
     shell:
         """
-        bwa index {input}
+        bowtie2-build --threads {threads} {input} {params.basename}
         samtools faidx {input}
-        touch {output}
         """
         
+
 # Final cleanup of de novo reference intermediate files
 # ------------------------------------------------ 
 rule cleanup_denovo_intermediate:   
     input:
-        fasta = f"{denovo_ref_dir}/sint_denovo_cc.fa",
-        tab = f"{denovo_ref_dir}/sint_denovo_cc.tab",
+        fasta = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta",
+        tab = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.tab",
         fq = f"{merge_dir}/cdh_alltags.fas"
     output:
         touch(f"{denovo_ref_dir}/cleanup.done")
