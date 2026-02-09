@@ -1,4 +1,3 @@
-# IN PROGRESS
 # ------------------------------------------------ #
 # 2bRAD De Novo Reference Construction Snakefile
 # Kirsten Carlson
@@ -61,10 +60,6 @@ local_rules = ["create_symb_reference",
                 "rename_denovo_ref",
                 "construct_denovo_ref",
                 "cleanup_denovo_intermediate"]
-
-rule all:
-    input:
-       f"{denovo_ref_dir}/cleanup.done"
 
 # ------------------------------------------------ #
 # Rules
@@ -242,7 +237,7 @@ rule rename_denovo_ref:
         f"{denovo_ref_dir}/{denovo_ref_basename}.fa"
     shell:
         """
-        cp {input} {output}
+        mv {input} {output}
         """ 
 
 # Construct de novo reference with 30 psuedo chromosomes
@@ -257,7 +252,7 @@ rule construct_denovo_ref:
         num_chr=30
     shell:
         """
-        {scripts_dir}/concatFasta.pl fasta={input} num={params.num_chr}
+        perl {scripts_dir}/concatFasta.pl fasta={input} num={params.num_chr}
         """
 
 # Format and index de novo reference genome
@@ -293,13 +288,12 @@ rule cleanup_denovo_intermediate:
     input:
         fasta = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta",
         tab = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.tab",
-        fq = f"{merge_dir}/cdh_alltags.fas"
+        index = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.1.bt2"
     output:
         touch(f"{denovo_ref_dir}/cleanup.done")
     shell:
         """
         rm {merge_dir}/*.uni
-        rm {input.fq}
         rm {merge_dir}/all.uniq
         rm {merge_dir}/all.tab
         rm {merge_dir}/all.fasta
