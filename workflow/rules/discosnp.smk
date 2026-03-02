@@ -25,20 +25,27 @@ trimfq_noSymb_dir = config["trimfq_noSymb_dir"]
 sint_align_dir = config["sint_align_dir"]
 # Resource directory (SRR numbers, run info)
 resource_dir = config["resource_dir"]
+# De novo reference directory
+denovo_ref_dir = config["denovo_ref_dir"]
+# De novo reference base name
+denovo_ref_basename = config["denovo_ref_basename"]
+# Scripts directory
+scripts_dir = config["scripts_dir"]
+
 
 # Get all FASTQ files and extract sample names
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
 
 # Parameter sweep values
-KMERS = [17,21,25] # kmer lengths to test
-DELS = [1,3,5] # max deletion size
+KMERS = [25] # kmer lengths to test
+DELS = [5] # max deletion size
 
 # Define final target(s)
 # Temporary rule_all for debugging
 rule all:
     input:
         expand(
-            f"/scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz",
+            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz",
             k=KMERS,
             D=DELS
         )
@@ -89,4 +96,77 @@ rule run_discosnpRad:
         # Compress and index
         bgzip -c discoRad_k_{wildcards.k}_c_3_D_{wildcards.D}_P_5_m_5_clustered.vcf > discoRad_k_{wildcards.k}_c_3_D_{wildcards.D}_P_5_m_5_clustered.vcf.gz
         tabix -p vcf discoRad_k_{wildcards.k}_c_3_D_{wildcards.D}_P_5_m_5_clustered.vcf.gz
+        """
+
+# Create VCF
+# ------------------------------------------------
+rule create_vcf:
+    input:
+        fa = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_raw_filtered.fa",
+        ref = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"
+    conda:
+        config["env"]
+    resources:
+        mem_mb=50000,
+        runtime=600
+    shell:
+        """
+        $CONDA_PREFIX/scripts/run_VCF_creator.sh \
+        -G {input.ref} \
+        -p {input.fa} \
+        -e \
+        -o {output.vcf}
+        """
+
+# Convert VCF from 0 to 1 format
+# ------------------------------------------------
+rule convert_vcf_format:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf"
+    conda:
+        config["env"]
+    shell:
+        """
+        python {scripts_dir}/zero2one.py -i {input.vcf} -o {output.vcf}
+        """
+
+
+# Add cluster info to mapped VCF
+# ------------------------------------------------
+rule add_cluster_info:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf",
+        vcf_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
+    resources:
+        mem_mb=50000,
+        runtime=1440
+    conda:
+        config["env"]
+    shell:
+        """
+        python $CONDA_PREFIX/discoSnpRAD/post-processing_scripts/add_cluster_info_to_mapped_vcf.py \
+        -m {input.vcf} \
+        -u {input.vcf_clustered} \
+        -o {output.vcf}
+        """
+
+# Compress and index final mapped VCF
+# ------------------------------------------------
+rule compress_index_vcf:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz"
+    conda:
+        config["env"]
+    shell:
+        """
+        bcftools sort {input.vcf} -Oz -o {output.vcf}
+        tabix -p vcf {output.vcf}
         """

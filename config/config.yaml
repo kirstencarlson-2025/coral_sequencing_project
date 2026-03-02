@@ -35,7 +35,7 @@ kraken_db_std: "/scratch/kcarls36/projects/data/kraken_db_standard"
 # Custom Kraken database directory
 kraken_db: "/scratch/kcarls36/projects/data/kraken_db"
 # Script directory
-scripts_dir: "/home/kcarls36/bin"
+scripts_dir: "/home/kcarls36/projects/stephanocoenia_FKNMS/workflow/scripts"
 # Symbiont genomes
 symbiont_genomes:
  - "/scratch/kcarls36/projects/data/symGenomes/Symbiodinium_microadriacticum_genome.scaffold.fasta"
