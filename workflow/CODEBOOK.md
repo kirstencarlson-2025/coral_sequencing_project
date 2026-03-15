@@ -32,7 +32,7 @@ Results:
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
  0.2033  0.2642  0.2888  0.3212  0.3281  0.9337 
 
-![per sample histogram](../results/k25_D5_missingness.png)
+![per sample histogram](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/k25_D5_missingness.png)
 
       samples    m2 (per sample)                 
 
