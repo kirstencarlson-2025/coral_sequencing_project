@@ -11,8 +11,8 @@ Code Used:
 
 <details>
   <summary>Date: 3/15/2026</summary>
-```bash
 
+```bash
 Goal: Using MarineOmics.github workflow, use SeqArray in R to evaluate missingness.
 Code Used: (code documentation in /scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/SeqArray_K25_D5.Rmd)
 Before converting vcf to gds with Seq Array, in command line:
@@ -36,7 +36,6 @@ Results:
 ```
 
 ![per sample histogram](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/k25_D5_missingness.png)
-
 
 ```bash
       samples    m2 (per sample)                 
