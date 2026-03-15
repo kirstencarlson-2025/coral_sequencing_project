@@ -20,6 +20,4 @@ Before converting vcf to gds with Seq Array, in command line:
 - index final vcf
 
 Use SeqArray to convert final vcf to gds format (I requested 32G and 4:00:00 in R session on hpc. Process took 1:15:00)
-
-
 ```
