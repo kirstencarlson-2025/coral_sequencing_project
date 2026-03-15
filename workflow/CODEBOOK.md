@@ -9,8 +9,9 @@ Goal:
 Code Used:
 ```
 
+<details>
+  <summary>Date: 3/15/2026</summary>
 ```bash
-Date: 3/15/2026
 Goal: Using MarineOmics.github workflow, use SeqArray in R to evaluate missingness.
 Code Used: (code documentation in /scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/SeqArray_K25_D5.Rmd)
 Before converting vcf to gds with Seq Array, in command line:
@@ -31,9 +32,11 @@ Results:
 [1] "Per sample: "
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
  0.2033  0.2642  0.2888  0.3212  0.3281  0.9337 
+```
 
 ![per sample histogram](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/k25_D5_missingness.png)
 
+```bash
       samples    m2 (per sample)                 
 
   [1,] "SFK120"   "0.933740061308554"
@@ -263,3 +266,5 @@ Results:
 [225,] "SFK203"   "0.215313368138711"
 [226,] "SFK033"   "0.20333904109589"
 ```
+</details>
+
