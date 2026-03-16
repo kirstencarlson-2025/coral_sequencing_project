@@ -1,4 +1,3 @@
-# IN PROGRESS
 # ------------------------------------------------ #
 # 2bRAD DiscoSNP-RAD Parameter Sweep Snakefile
 # Kirsten Carlson
@@ -6,7 +5,7 @@
 # ------------------------------------------------ #
 
 # This Snakefile runs the pipeline for processing filtered 2bRAD fastq files from Stephanocoenia intersepta samples with DiscoSNP to call variants.
-# It also filters and processes vcf files to create a final set of variants for downstream analyses.
+# It also preps the VCF for exploratory QC analysis with SeqArray in R..
 
 
 # ------------------------------------------------ #
@@ -35,20 +34,6 @@ scripts_dir = config["scripts_dir"]
 
 # Get all FASTQ files and extract sample names
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
-
-# Parameter sweep values
-KMERS = [25] # kmer lengths to test
-DELS = [5] # max deletion size
-
-# Define final target(s)
-# Temporary rule_all for debugging
-rule all:
-    input:
-        expand(
-            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz",
-            k=KMERS,
-            D=DELS
-        )
 
 # ------------------------------------------------ #
 # Rules
@@ -167,6 +152,89 @@ rule compress_index_vcf:
         config["env"]
     shell:
         """
+       bcftools sort {input.vcf} -Oz -o {output.vcf}
+        tabix -p vcf {output.vcf}
+       """
+
+# Prepare VCF for exploratory QC with SeqArray in R
+
+# Sort the clustered VCF
+# ------------------------------------------------
+rule sort_clustered_vcf:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz"
+    conda:
+        config["env"]
+    shell:
+        """
         bcftools sort {input.vcf} -Oz -o {output.vcf}
+        """
+
+# Reheader the VCF with correct sampleID (discoSnp_Rad ouputs sampleID as G1-Gx in the order of the fof.txt)
+
+# Create sample map from fof.txt
+# ------------------------------------------------
+rule create_sample_map:
+    input:
+        fof = f"{sint_align_dir}/discosnp/fof.txt"
+    output:
+        sample_map = f"{sint_align_dir}/discosnp/sample_map.txt"
+    conda:
+        config['env']
+    shell:
+        """
+        awk -F/ '{{fname=$NF; sub("\\.fastq$","",fname); print "G"NR"\\t"fname}}' {input.fof} > {output.sample_map}
+        """
+
+
+# Reheader VCF
+# ------------------------------------------------
+rule reheader_vcf:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz",
+        sample_map = f"{sint_align_dir}/discosnp/sample_map.txt"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz"
+    conda:
+        config["env"]
+    shell:
+        """
+        bcftools reheader -s {input.sample_map} {input.vcf} -o {output.vcf}
+        """
+
+# Slim up the sorted and reheadered clustered VCF for exploratory QC with SeqArray in R
+# ------------------------------------------------
+rule slim_clustered_vcf:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim.vcf.gz",
+        tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim.vcf.gz.tbi"
+    conda:
+        config["env"]
+    shell:
+        """
+        bcftools annotate -x INFO,FORMAT,CONTIG {input.vcf} -Oz -o {output.vcf}
         tabix -p vcf {output.vcf}
         """
+
+# Remove intermediate files to save space
+# ------------------------------------------------
+rule cleanup_discosnp_intermediate:
+    input:
+        temp = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf",
+        temp_1 = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf",
+        sorted_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz",
+        sorted_reheader_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz",
+        # Include slim VCF only to force cleanup rule
+        slim = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim.vcf.gz"
+    output:
+        done = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/cleanup.done"
+    shell:
+        """
+        rm -f {input.temp} {input.temp_1} {input.sorted_clustered} {input.sorted_reheader_clustered}
+        touch {output.done}
+        """
+# Great! You can now use the Rmd file in the workflow/code directory to perform exploratory QC with SeqArray in R.

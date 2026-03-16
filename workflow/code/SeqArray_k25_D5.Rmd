@@ -1,0 +1,91 @@
+---
+title: "SeqArray_k25_D5"
+author: "KirstenCarlson"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+This RMarkdown records commands used to evaluate discoSnp_Rad VCF for errors, using workflow outlined in https://marineomics.github.io/RADseq.html#Evaluate_potential_sources_of_error.
+
+For testing, I will be using only one vcf (k = 25, D = 5).
+
+## Install packages
+
+```{r}
+install.packages("BiocManager")
+BiocManager::install("SeqArray")
+```
+## Load Packages
+
+```{r}
+library(SeqArray)
+```
+
+
+## Convert VCF file to GDS format
+
+First, make sure sampleID's are correct. DiscoSnp_Rad names sampleid G1-Gx in the order of your fof.txt. In the command line:
+```{r}
+awk '{split($1,a,"/"); sub(".fastq$","",a[length(a)]); print "G"NR"\t"a[length(a)]}' fof.txt > sample_map.txt
+bcftools reheader -s sample_map.txt discoRad_k_25_c_3_D_5_P_5_m_5_sorted_clustered.vcf.gz -o discoRad_k_25_c_3_D_5_P_5_m_5_sorted_clustered.vcf.gz
+```
+*******corrupted vcf file? Error [E::bgzf_read_block] Failed to read BGZF block data at offset 1178239 expected 3951 bytes; hread returned 1836
+Error: BCF read error
+
+Then, slim up the sorted, gzipped vcf by running in the command line.
+```{r}
+bcftools annotate -x INFO,FORMAT,CONTIG discoRad_k_25_c_3_D_5_P_5_m_5_sorted_clustered.vcf.gz -Oz -o discoRad_k_25_D_5.slim.vcf.gz
+tabix -p vcf discoRad_k_25_D_5.slim.vcf.gz 
+```
+
+Set variables (directory, filename, parameter analysing):
+
+```{r}
+scratch.directory = "/scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/"
+results.directory = "/home/kcarls36/projects/stephanocoenia_FKNMS/results/discosnp/k25_D5/"
+parameters = "k25_D5"
+filename = "discoRad_k_25_D_5.slim"
+filename.gds = paste0(scratch.directory, filename, ".gds")
+filename.vcf = paste0(scratch.directory, filename, ".vcf.gz")
+```
+
+Then run SeqArray on the slimmed vcf. (I requested 32G and 4:00:00 for R hpc session. Process took about 1hr15min)
+```{r}
+SeqArray::seqVCF2GDS(vcf.fn = filename.vcf, out.fn = filename.gds, storage.option="ZIP_RA")
+```
+
+Read in file:
+```{r}
+gdsin = SeqArray::seqOpen(filename.gds)
+```
+
+
+Cross check # samples:
+```{r}
+print(paste0("The number of SAMPLES in data: ", length(c(SeqArray::seqGetData(gdsin, "sample.id")))))
+print(paste0("The number of variants in data: ", length(c(SeqArray::seqGetData(gdsin, "variant.id")))))
+```
+
+Upload metadata file???
+```{r}
+metafile = 
+```
+
+## Missingness 
+
+```{r}
+print("Per variant: ")
+summary(m1 <- SeqArray::seqMissing(gdsin, per.variant=TRUE))
+print("Per sample: ")
+summary(m2 <- SeqArray::seqMissing(gdsin, per.variant=FALSE))
+samples <- SeqArray::seqGetData(gdsin, "sample.id")
+cbind(samples,m2)[order(-m2),]
+# plot histogram
+png(filename= paste0(results.directory, parameters, "_missingness_hist.png"), width = 800, height = 600, units = "px")
+hist(m2,breaks=50)
+dev.off()
+```
+
+```{r, echo=FALSE, fig.align="center}
+knitr::include_graphics(paste0(results.directory, parameters, "_missingness_hist.png"))
+```

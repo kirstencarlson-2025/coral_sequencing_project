@@ -49,6 +49,9 @@ symbiont_genomes = config["symbiont_genomes"]
 reference_symbiont = config["reference_symbiont"] 
 # Script directory
 scripts_dir = config["scripts_dir"]
+# Parameter sweep for discoSnp_Rad
+KMERS = config["discosnp_kmers"]
+DELS = config["discosnp_dels"]
 # Number of threads to use
 threads = config["threads"] 
 quality = config["quality"]
@@ -61,6 +64,7 @@ include: "rules/metadata.smk"
 include: "rules/download.smk"
 include: "rules/trim_qc.smk"
 include: "rules/de_novo_symb_pipeline.smk"
+include: "rules/discosnp.smk"
 
 import pandas as pd
 
