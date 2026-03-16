@@ -101,6 +101,7 @@ rule cleanup_discosnp_intermediate:
 
 # Great! You can now use the Rmd file in the workflow/code directory to perform exploratory QC with SeqArray in R.
 ```
+</details>
 
 <details>
   <summary>Date: 3/15/2026</summary>
