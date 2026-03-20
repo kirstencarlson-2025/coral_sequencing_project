@@ -99,7 +99,7 @@ as.data.frame(pca.out$eigenvect) %>%
       ylab(paste0("PC2 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
       ggtitle("Initial PCA: Replicates")
 ```
-![Replicates PCA](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/discosnp/k25_D5/k25_D5_pcaInitial_replicates_V1_V2.png)
+![Replicates PCA](../results/discosnp/k25_D5/k25_D5_pcaInitial_replicates_V1_V2.png)
 </details>
 
 <details>
@@ -218,7 +218,7 @@ Results:
  0.2033  0.2642  0.2888  0.3212  0.3281  0.9337 
 ```
 
-![per sample histogram](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/discosnp/k25_D5/k25_D5_missingness.png)
+![per sample histogram](../results/discosnp/k25_D5/k25_D5_missingness.png)
 
 ```bash
       samples    m2 (per sample)                 
