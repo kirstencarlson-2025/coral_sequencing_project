@@ -77,9 +77,28 @@ print(
       ylab(paste0("PC2 [",paste0(round(eig[2], 2)), "%]")) +
       ggtitle("PCA Colored by Depth Zone")
 )
-)
 
+![Intial PCA](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/discosnp/k25_D5/k25_D5_pcaInitial_V1_V2.png)
 
+# Plot PCA with only replicates to see if they cluster:
+replicates <- c("SFK066.1", "SFK066.2", "SFK066.3", "SFK162.1", "SFK162.2", "SFK162.3", "SFK205.1", "SFK205.2", "SFK205.3")
+
+as.data.frame(pca.out$eigenvect) %>%
+      tibble::add_column(
+        sample = pca.out$sample.id, 
+        depthZone =  sample.strata.order$depthZone, 
+        site = sample.strata.order$site) %>%
+      dplyr::filter(sample %in% replicates) %>%
+      ggplot(aes(x=V1, y=V2, label = sample)) + 
+      geom_text(size = 3) +
+      geom_hline(yintercept = 0) +
+      geom_vline(xintercept = 0) +
+      theme_bw() +
+      xlab(paste0("PC1 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
+      ylab(paste0("PC2 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
+      ggtitle("Initial PCA: Replicates")
+
+![Replicates PCA](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/discosnp/k25_D5/k25_D5_pcaInitial_replicates_V1_V2.png)
 
 ```
 </details>
