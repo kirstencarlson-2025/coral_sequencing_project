@@ -12,6 +12,7 @@ Kirsten Carlson
 Goal: Initial PCA of samples in R (from MarineGenomics SeqArray workflow)
 
 Code used:
+```bash
 Bad samples: (excluding anything over 50%)
 "SFK120"   "0.933740061308554"
 "SFK085"   "0.920167161605518"
@@ -24,6 +25,7 @@ Bad samples: (excluding anything over 50%)
 "SFK208"   "0.592127478685698"
 "SFK214"   "0.582057069642686"
 "SFK213"   "0.512573043394961"
+```
 ```bash
 # exclude samples with over 50% missing data
 # Removed 4% of samples
@@ -74,9 +76,11 @@ print(
       ylab(paste0("PC2 [",paste0(round(eig[2], 2)), "%]")) +
       ggtitle("PCA Colored by Depth Zone")
 )
+```
 
 ![Intial PCA](../results/discosnp/k25_D5/k25_D5_pcaInitial_V1_V2.png))
 
+```bash
 # Plot PCA with only replicates to see if they cluster:
 replicates <- c("SFK066.1", "SFK066.2", "SFK066.3", "SFK162.1", "SFK162.2", "SFK162.3", "SFK205.1", "SFK205.2", "SFK205.3")
 
@@ -94,10 +98,8 @@ as.data.frame(pca.out$eigenvect) %>%
       xlab(paste0("PC1 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
       ylab(paste0("PC2 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
       ggtitle("Initial PCA: Replicates")
-
-![Replicates PCA](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/discosnp/k25_D5/k25_D5_pcaInitial_replicates_V1_V2.png)
-
 ```
+![Replicates PCA](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/discosnp/k25_D5/k25_D5_pcaInitial_replicates_V1_V2.png)
 </details>
 
 <details>
