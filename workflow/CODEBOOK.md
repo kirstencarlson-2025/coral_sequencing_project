@@ -75,7 +75,7 @@ print(
       ggtitle("PCA Colored by Depth Zone")
 )
 
-![Intial PCA](https://github.com/kirstencarlson-2025/coral_sequencing_project/blob/main/results/discosnp/k25_D5/k25_D5_pcaInitial_V1_V2.png)
+![Intial PCA](../results/discosnp/k25_D5/k25_D5_pcaInitial_V1_V2.png))
 
 # Plot PCA with only replicates to see if they cluster:
 replicates <- c("SFK066.1", "SFK066.2", "SFK066.3", "SFK162.1", "SFK162.2", "SFK162.3", "SFK205.1", "SFK205.2", "SFK205.3")
