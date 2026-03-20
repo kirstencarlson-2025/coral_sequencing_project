@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+# Pre-processing cluster distribution
 Read in text file
 ```{r}
 cluster.sizes <- read.table("/scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/preprocessing_cluster_sizes.txt", header=FALSE, sep = "")
@@ -16,10 +17,13 @@ summary(cluster.sizes)
 
 Plot histogram
 ```{r}
-png()
+png(filename = "/home/kcarls36/projects/stephanocoenia_FKNMS/results/discosnp/k25_D5/k25_D5_preprocessing_clusterdist.png", width = 800, height = 500, units = "px")
 hist(cluster.sizes, 
      breaks= seq(min(cluster.sizes), max(cluster.sizes), by = 1), 
      main="Cluster Size Distribution", 
      xlab="Cluster Size"
      )
+dev.off()
+
+
 ```

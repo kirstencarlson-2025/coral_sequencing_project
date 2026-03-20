@@ -124,6 +124,45 @@ as.data.frame(pca.out$eigenvect) %>%
       ggtitle("Initial PCA: Replicates")
 ```
 ![Replicates PCA](../results/discosnp/k25_D5/k25_D5_pcaInitial_replicates_V1_V2.png)
+
+Remove replicates and rerun PCA
+```bash
+keep_noreps <- keep[!keep %in% replicates]
+
+pca.out.noreps = SNPRelate::snpgdsPCA(autosome.only=F, gdsin, num.thread = 1, remove.monosnp = T, maf = 0.05, snp.id=snpset.id, sample.id=keep_noreps)
+```
+```bash
+Principal Component Analysis (PCA) on genotypes:
+Calculating allele counts/frequencies (23741 variants) ...
+[==================================================] 100%, complete, 0s     
+# of selected variants: 9,137
+Excluding 14,604 SNVs (monomorphic: TRUE, MAF: 0.05, missing rate: 0.01)
+    # of samples: 208
+    # of SNVs: 9,137
+    using 1 thread/core
+    # of principal components: 32
+CPU capabilities: Double-Precision SSE2
+2026-03-20 15:14:44    (internal increment: 19828)
+[==================================================] 100%, completed, 1s  
+2026-03-20 15:14:45    Begin (eigenvalues and eigenvectors)
+2026-03-20 15:14:45    Done.
+```
+Remove replicates and rerun PCA
+```bash
+keep_noreps <- keep[!keep %in% replicates]
+
+pca.out.noreps = SNPRelate::snpgdsPCA(autosome.only=F, gdsin, num.thread = 1, remove.monosnp = T, maf = 0.05, snp.id=snpset.id, sample.id=keep_noreps)
+#PC1 v PC2 colored by depth Zone
+id.order.noreps = sapply(keep_noreps, function(x,df){which(df$sample == x)}, df=sample.strata) #in case your strata file is not in the same order as your vcf
+sample.strata.order.noreps = sample.strata[id.order.noreps,]
+```
+PCA (PC1 and PC2)
+![PC1 PC2](../results/discosnp/k25_D5/k25_D5__pcaInitial_noreps_V1_V2.png)
+
+PCA (PC2 and PC3)
+![PC2 PC3](../results/discosnp/k25_D5/k25_D5__pcaInitial_noreps_V2_V3.png)
+
+
 </details>
 
 <details>

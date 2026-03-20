@@ -164,3 +164,53 @@ dev.off()
 knitr::include_graphics(paste0(results.directory, parameters, "_pcaInitial_replicates_V1_V2.png"))
 ```
 
+Remove replicates and rerun PCA
+```{r}
+keep_noreps <- keep[!keep %in% replicates]
+
+pca.out.noreps = SNPRelate::snpgdsPCA(autosome.only=F, gdsin, num.thread = 1, remove.monosnp = T, maf = 0.05, snp.id=snpset.id, sample.id=keep_noreps)
+```
+```{r}
+#PC1 v PC2 colored by depth Zone
+id.order.noreps = sapply(keep_noreps, function(x,df){which(df$sample == x)}, df=sample.strata) #in case your strata file is not in the same order as your vcf
+sample.strata.order.noreps = sample.strata[id.order.noreps,]
+```
+
+
+```{r}
+png(filename= paste0(results.directory, parameters, "_pcaInitial_noreps_V1_V2.png"), width = 800, height = 500, units = "px")
+print(
+  as.data.frame(pca.out.noreps$eigenvect) %>%
+      tibble::add_column(., depthZone =  sample.strata.order.noreps$depthZone, site = sample.strata.order.noreps$site) %>%
+      ggplot(., aes(x=V1, y=V2, shape = depthZone, color = site)) + 
+      geom_point(size = 5, alpha = 0.5) +
+      geom_hline(yintercept = 0) +
+      geom_vline(xintercept = 0) +
+      theme_bw() +
+      xlab(paste0("PC1 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
+      ylab(paste0("PC2 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
+      ggtitle("PCA (no replicates) Colored by Site and Shape by Depth Zone")
+)
+dev.off()
+
+knitr::include_graphics(paste0(results.directory, parameters, "_pcaInitial_noreps_V1_V2.png"))
+```
+
+```{r}
+png(filename= paste0(results.directory, parameters, "_pcaInitial_noreps_V2_V3.png"), width = 800, height = 500, units = "px")
+print(
+  as.data.frame(pca.out.noreps$eigenvect) %>%
+      tibble::add_column(., depthZone =  sample.strata.order.noreps$depthZone, site = sample.strata.order.noreps$site) %>%
+      ggplot(., aes(x=V2, y=V3, shape = depthZone, color = site)) + 
+      geom_point(size = 5, alpha = 0.5) +
+      geom_hline(yintercept = 0) +
+      geom_vline(xintercept = 0) +
+      theme_bw() +
+      xlab(paste0("PC2 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
+      ylab(paste0("PC3 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
+      ggtitle("PCA (no replicates) Colored by Site and Shape by Depth Zone")
+)
+dev.off()
+
+knitr::include_graphics(paste0(results.directory, parameters, "_pcaInitial_noreps_V2_V3.png"))
+```
