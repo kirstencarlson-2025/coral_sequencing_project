@@ -157,10 +157,10 @@ id.order.noreps = sapply(keep_noreps, function(x,df){which(df$sample == x)}, df=
 sample.strata.order.noreps = sample.strata[id.order.noreps,]
 ```
 PCA (PC1 and PC2)
-![PC1 PC2](../results/discosnp/k25_D5/k25_D5__pcaInitial_noreps_V1_V2.png)
+![PC1 PC2](../results/discosnp/k25_D5/k25_D5_pcaInitial_noreps_V1_V2.png)
 
 PCA (PC2 and PC3)
-![PC2 PC3](../results/discosnp/k25_D5/k25_D5__pcaInitial_noreps_V2_V3.png)
+![PC2 PC3](../results/discosnp/k25_D5/k25_D5_pcaInitial_noreps_V2_V3.png)
 
 
 </details>
