@@ -5,9 +5,6 @@ Kirsten Carlson
 <br>
 <details>
   <summary>Date:     </summary>
-```bash
-
-```
 </details>
 
 <details>
