@@ -4,11 +4,82 @@ Kirsten Carlson
 <br>Coding notebook for recording code used, troubleshooting steps, brainstorming, etc.
 <br>
 <details>
-  <summary>Date: 3/16/2026</summary>
-Goal:
+  <summary>Date:     </summary>
+```bash
+
+```
+</details>
+
+<details>
+  <summary>Date: 3/20/2026</summary>
+Goal: Initial PCA of samples in R (from MarineGenomics SeqArray workflow)
 
 Code used:
+Bad samples: (excluding anything over 50%)
+"SFK120"   "0.933740061308554"
+"SFK085"   "0.920167161605518"
+"SFK134"   "0.850491546125108"
+"SFK188"   "0.809967429830444"
+"SFK178"   "0.719001460867899"
+"SFK198"   "0.714451216591628"
+"SFK106"   "0.690801920682058"
+"SFK127"   "0.670496455599195"
+"SFK208"   "0.592127478685698"
+"SFK214"   "0.582057069642686"
+"SFK213"   "0.512573043394961"
 ```bash
+# exclude samples with over 50% missing data
+# Removed 4% of samples
+bad_samples = c("SKF120", "SFK085", "SFK134", "SFK188", "SFK178", "SFK198", "SFK106", "SKF127", "SFK208", "SFK214", "SFK213")
+
+sample.ids = seqGetData(gdsin, "sample.id")
+keep = sample.ids[which(!sample.ids %in% bad_samples)]
+
+# This process took about 45 min with 1 thread..
+snpset <- SNPRelate::snpgdsLDpruning(gdsin, ld.threshold=0.2, autosome.only=F, start.pos="random", num.thread=1, remove.monosnp=T, sample.id=keep)
+snpset.id <- unlist(unname(snpset))
+
+# 334048 variants
+# Excluding 308,769 SNVs
+# Number samples: 217
+# # SNVs: 25,279
+# sliding window: 500,000 basepairs, Inf SNPs
+
+# PCA with maf > 5%
+pca.out = SNPRelate::snpgdsPCA(autosome.only=F, gdsin, num.thread=2, remove.monosnp=T, maf=0.05, snp.id=snpset.id, sample.id=keep)
+
+
+# Calculating allele counts/frequencies (23741 variants) ...    
+# No. of selected variants: 9,118
+
+# Excluding 14,623 SNVs (monomorphic: TRUE, MAF: 0.05, missing rate: 0.01)
+# of samples: 217
+# of SNVs: 9,118
+# using 2 threads/cores
+# of principal components: 32
+# CPU capabilities: Double-Precision SSE2
+
+# Plot PCA:
+#PC1 v PC2 colored by depth Zone
+id.order = sapply(keep, function(x,df){which(df$ID == x)}, df=sample.strata) #in case your strata file is not in the same order as your vcf
+sample.strata.order = sample.strata[id.order,]
+
+print(
+  as.data.frame(pca.out$eigenvect) %>%
+      tibble::add_column(., depthZone =  sample.strata.order$depthZone) %>%
+      ggplot(., aes(x=V1, y=V2, color = depthZone)) + 
+      geom_point(size = 2) +
+      stat_ellipse(level = 0.95, linewidth = 1) +
+      geom_hline(yintercept = 0) +
+      geom_vline(xintercept = 0) +
+      theme_bw() +
+      xlab(paste0("PC1 [",paste0(round(eig[1], 2)), "%]")) +
+      ylab(paste0("PC2 [",paste0(round(eig[2], 2)), "%]")) +
+      ggtitle("PCA Colored by Depth Zone")
+)
+)
+
+
 
 ```
 </details>

@@ -14,29 +14,20 @@ For testing, I will be using only one vcf (k = 25, D = 5).
 ```{r}
 install.packages("BiocManager")
 BiocManager::install("SeqArray")
+BiocManager::install("SNPRelate")
+install.packages("ggplot2")
 ```
 ## Load Packages
 
 ```{r}
 library(SeqArray)
+library(dplyr)
+library(SNPRelate)
+library(ggplot2)
 ```
 
 
 ## Convert VCF file to GDS format
-
-First, make sure sampleID's are correct. DiscoSnp_Rad names sampleid G1-Gx in the order of your fof.txt. In the command line:
-```{r}
-awk '{split($1,a,"/"); sub(".fastq$","",a[length(a)]); print "G"NR"\t"a[length(a)]}' fof.txt > sample_map.txt
-bcftools reheader -s sample_map.txt discoRad_k_25_c_3_D_5_P_5_m_5_sorted_clustered.vcf.gz -o discoRad_k_25_c_3_D_5_P_5_m_5_sorted_clustered.vcf.gz
-```
-*******corrupted vcf file? Error [E::bgzf_read_block] Failed to read BGZF block data at offset 1178239 expected 3951 bytes; hread returned 1836
-Error: BCF read error
-
-Then, slim up the sorted, gzipped vcf by running in the command line.
-```{r}
-bcftools annotate -x INFO,FORMAT,CONTIG discoRad_k_25_c_3_D_5_P_5_m_5_sorted_clustered.vcf.gz -Oz -o discoRad_k_25_D_5.slim.vcf.gz
-tabix -p vcf discoRad_k_25_D_5.slim.vcf.gz 
-```
 
 Set variables (directory, filename, parameter analysing):
 
@@ -44,7 +35,9 @@ Set variables (directory, filename, parameter analysing):
 scratch.directory = "/scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/"
 results.directory = "/home/kcarls36/projects/stephanocoenia_FKNMS/results/discosnp/k25_D5/"
 parameters = "k25_D5"
-filename = "discoRad_k_25_D_5.slim"
+resources.directory = "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/"
+metafile = paste0(resources.directory, "stephanocoeniaMetaData.csv")
+filename = "discoRad_k_25_D_5_slim"
 filename.gds = paste0(scratch.directory, filename, ".gds")
 filename.vcf = paste0(scratch.directory, filename, ".vcf.gz")
 ```
@@ -66,9 +59,12 @@ print(paste0("The number of SAMPLES in data: ", length(c(SeqArray::seqGetData(gd
 print(paste0("The number of variants in data: ", length(c(SeqArray::seqGetData(gdsin, "variant.id")))))
 ```
 
-Upload metadata file???
+Upload metadata file
 ```{r}
-metafile = 
+sample.ids = seqGetData(gdsin, "sample.id")
+metadata = read.csv(metafile)
+sample.strata = metadata %>%
+                    select(sample,site,depthZone)
 ```
 
 ## Missingness 
@@ -88,4 +84,103 @@ dev.off()
 
 ```{r, echo=FALSE, fig.align="center}
 knitr::include_graphics(paste0(results.directory, parameters, "_missingness_hist.png"))
+```
+
+## PCA
+
+Exclude samples that have too much missing data
+
+```{r}
+# exclude samples with over 50% missing data
+bad_samples = c("SKF120", "SFK085", "SFK134", "SFK188", "SFK178", "SFK198", "SFK106", "SKF127", "SFK208", "SFK214", "SFK213")
+
+sample.ids = seqGetData(gdsin, "sample.id")
+keep = sample.ids[which(!sample.ids %in% bad_samples)]
+```
+
+Filter out linked sites if needed:
+(This took 45 min with one thread)
+```{r}
+snpset <- SNPRelate::snpgdsLDpruning(gdsin, ld.threshold=0.2, autosome.only=F, start.pos="random", num.thread=1, remove.monosnp=T, sample.id=keep)
+snpset.id <- unlist(unname(snpset))
+```
+
+Run PCA
+```{r}
+# PCA only on SNPs with a minor allele frequency > 5%
+pca.out = SNPRelate::snpgdsPCA(autosome.only=F, gdsin, num.thread=2, remove.monosnp=T, maf=0.05, snp.id=snpset.id, sample.id=keep)
+```
+
+## Plot PCA
+
+Ensure correct sampleID ordering
+```{r}
+#PC1 v PC2 colored by depth Zone
+id.order = sapply(keep, function(x,df){which(df$sample == x)}, df=sample.strata) #in case your strata file is not in the same order as your vcf
+sample.strata.order = sample.strata[id.order,]
+```
+
+PCA of axis 1 and 2, colored by depth zone
+```{r}
+png(filename= paste0(results.directory, parameters, "_pcaInitial_V1_V2.png"), width = 800, height = 500, units = "px")
+print(
+  as.data.frame(pca.out$eigenvect) %>%
+      tibble::add_column(., depthZone =  sample.strata.order$depthZone, site = sample.strata.order$site) %>%
+      ggplot(., aes(x=V1, y=V2, shape = depthZone, color = site)) + 
+      geom_point(size = 5, alpha = 0.5) +
+      geom_hline(yintercept = 0) +
+      geom_vline(xintercept = 0) +
+      theme_bw() +
+      xlab(paste0("PC1 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
+      ylab(paste0("PC2 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
+      ggtitle("Initial PCA Colored by Site and Shape by Depth Zone")
+)
+dev.off()
+
+knitr::include_graphics(paste0(results.directory, parameters, "_pcaInitial_V1_V2.png"))
+```
+
+View replicates from PCA with sample labels. Do they cluster together?
+```{r}
+replicates <- c("SFK066.1", "SFK066.2", "SFK066.3", "SFK162.1", "SFK162.2", "SFK162.3", "SFK205.1", "SFK205.2", "SFK205.3")
+
+png(filename= paste0(results.directory, parameters, "_pcaInitial_replicates_V1_V2.png"), width = 800, height = 500, units = "px")
+as.data.frame(pca.out$eigenvect) %>%
+      tibble::add_column(
+        sample = pca.out$sample.id, 
+        depthZone =  sample.strata.order$depthZone, 
+        site = sample.strata.order$site) %>%
+      dplyr::filter(sample %in% replicates) %>%
+      ggplot(aes(x=V1, y=V2, label = sample)) + 
+      geom_text(size = 3) +
+      geom_hline(yintercept = 0) +
+      geom_vline(xintercept = 0) +
+      theme_bw() +
+      xlab(paste0("PC1 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
+      ylab(paste0("PC2 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
+      ggtitle("Initial PCA: Replicates")
+dev.off()
+
+knitr::include_graphics(paste0(results.directory, parameters, "_pcaInitial_replicates_V1_V2.png"))
+```
+
+
+PCA of axis 2 and 3, colored by depth zone:
+```{r}
+png(filename= paste0(results.directory, parameters, "_pca_V2_V3.png"), width = 800, height = 500, units = "px")
+print(
+  as.data.frame(pca.out$eigenvect) %>%
+      tibble::add_column(., depthZone =  sample.strata.order$depthZone) %>%
+      ggplot(., aes(x=V2, y=V3, color = depthZone)) + 
+      geom_point(size = 2) +
+      geom_hline(yintercept = 0) +
+      geom_vline(xintercept = 0) +
+      theme_bw() +
+      xlab(paste0("PC2 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
+      ylab(paste0("PC3 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
+      ggtitle("PCA Colored by Depth Zone")
+)
+dev.off()
+
+knitr::include_graphics(paste0(results.directory, parameters, "_pca_V2_V3.png"))
 ```
