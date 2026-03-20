@@ -127,7 +127,9 @@ as.data.frame(pca.out$eigenvect) %>%
 
 Remove replicates and rerun PCA
 ```bash
-keep_noreps <- keep[!keep %in% replicates]
+# Remove replicates, keep one with lowest missingness
+replicates.remove <- c("SFK066.1", "SFK066.3", "SFK162.1", "SFK162.3", "SFK205.1", "SFK205.3")
+keep_noreps <- keep[!keep %in% replicates.remove]
 
 pca.out.noreps = SNPRelate::snpgdsPCA(autosome.only=F, gdsin, num.thread = 1, remove.monosnp = T, maf = 0.05, snp.id=snpset.id, sample.id=keep_noreps)
 ```
