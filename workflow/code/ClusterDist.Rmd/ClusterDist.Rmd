@@ -1,0 +1,25 @@
+---
+title: "ClusterDist.Rmd"
+author: "KirstenCarlson"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Read in text file
+```{r}
+cluster.sizes <- read.table("/scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/preprocessing_cluster_sizes.txt", header=FALSE, sep = "")
+
+cluster.sizes <- as.numeric(cluster.sizes$V1)
+
+summary(cluster.sizes)
+```
+
+Plot histogram
+```{r}
+png()
+hist(cluster.sizes, 
+     breaks= seq(min(cluster.sizes), max(cluster.sizes), by = 1), 
+     main="Cluster Size Distribution", 
+     xlab="Cluster Size"
+     )
+```

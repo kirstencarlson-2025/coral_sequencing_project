@@ -164,23 +164,3 @@ dev.off()
 knitr::include_graphics(paste0(results.directory, parameters, "_pcaInitial_replicates_V1_V2.png"))
 ```
 
-
-PCA of axis 2 and 3, colored by depth zone:
-```{r}
-png(filename= paste0(results.directory, parameters, "_pca_V2_V3.png"), width = 800, height = 500, units = "px")
-print(
-  as.data.frame(pca.out$eigenvect) %>%
-      tibble::add_column(., depthZone =  sample.strata.order$depthZone) %>%
-      ggplot(., aes(x=V2, y=V3, color = depthZone)) + 
-      geom_point(size = 2) +
-      geom_hline(yintercept = 0) +
-      geom_vline(xintercept = 0) +
-      theme_bw() +
-      xlab(paste0("PC2 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
-      ylab(paste0("PC3 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
-      ggtitle("PCA Colored by Depth Zone")
-)
-dev.off()
-
-knitr::include_graphics(paste0(results.directory, parameters, "_pca_V2_V3.png"))
-```

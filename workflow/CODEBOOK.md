@@ -5,6 +5,30 @@ Kirsten Carlson
 <br>
 <details>
   <summary>Date:     </summary>
+Goal:
+</details>
+
+<details>
+  <summary>Date:3/20/2026 </summary>
+Goal: Look at cluster size distribution on discoSnp_Rad unfiltered clustered VCF
+
+Code used:
+```bash
+cluster.sizes <- read.table("/scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/preprocessing_cluster_sizes.txt", header=FALSE, sep = "")
+cluster.sizes <- as.numeric(cluster.sizes$V1)
+summary(cluster.sizes)
+ Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+
+  1.000   1.000   2.000   3.077   3.000 134.000 
+```
+```bash
+hist(cluster.sizes, 
+     breaks= seq(min(cluster.sizes), max(cluster.sizes), by = 1), 
+     main="Cluster Size Distribution", 
+     xlab="Cluster Size"
+     )
+```
+![preprocessing cluster distribution](../results/discosnp/k25_D5/k25_D5_preprocessing_clusterdist.png)
 </details>
 
 <details>

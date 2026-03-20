@@ -1,2 +1,3 @@
 .snakemake/
 scripts/.snakemake/
+.Rproj.user
