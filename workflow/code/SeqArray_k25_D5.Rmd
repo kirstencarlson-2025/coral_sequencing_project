@@ -166,7 +166,9 @@ knitr::include_graphics(paste0(results.directory, parameters, "_pcaInitial_repli
 
 Remove replicates and rerun PCA
 ```{r}
-keep_noreps <- keep[!keep %in% replicates]
+# Remove replicates, keep one with lowest missingness
+replicates.remove <- c("SFK066.1", "SFK066.3", "SFK162.1", "SFK162.3", "SFK205.1", "SFK205.3")
+keep_noreps <- keep[!keep %in% replicates.remove]
 
 pca.out.noreps = SNPRelate::snpgdsPCA(autosome.only=F, gdsin, num.thread = 1, remove.monosnp = T, maf = 0.05, snp.id=snpset.id, sample.id=keep_noreps)
 ```
@@ -206,8 +208,8 @@ print(
       geom_hline(yintercept = 0) +
       geom_vline(xintercept = 0) +
       theme_bw() +
-      xlab(paste0("PC2 [",paste0(round(pca.out$varprop[1]*100, 2)), "%]")) +
-      ylab(paste0("PC3 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
+      xlab(paste0("PC2 [",paste0(round(pca.out$varprop[2]*100, 2)), "%]")) +
+      ylab(paste0("PC3 [",paste0(round(pca.out$varprop[3]*100, 2)), "%]")) +
       ggtitle("PCA (no replicates) Colored by Site and Shape by Depth Zone")
 )
 dev.off()

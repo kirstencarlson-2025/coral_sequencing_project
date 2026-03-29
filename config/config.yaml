@@ -37,8 +37,8 @@ kraken_db: "/scratch/kcarls36/projects/data/kraken_db"
 # Script directory
 scripts_dir: "/home/kcarls36/projects/stephanocoenia_FKNMS/workflow/scripts"
 # Parameter sweep for discoSnp_Rad
-discosnp_kmers: [17,21,25] # kmer lengths to test
-discosnp_dels: [1,3,5] # max deletion size
+discosnp_kmers: [25] # kmer lengths to test
+discosnp_dels: [5] # max deletion size
 # Symbiont genomes
 symbiont_genomes:
  - "/scratch/kcarls36/projects/data/symGenomes/Symbiodinium_microadriacticum_genome.scaffold.fasta"
