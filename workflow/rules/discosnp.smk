@@ -43,7 +43,7 @@ SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
 rule all:
     input:
         expand(
-            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/cleanup.done", k=KMERS, D=DELS
+            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz", k=KMERS, D=DELS
         )
 
 # ------------------------------------------------ #
@@ -74,7 +74,7 @@ rule run_discosnpRad:
     resources:
         mem_mb=50000,
         runtime=1440,
-        cpus-per-task=12
+        cpus_per_task=12
     shell:
         """
         # Create output directory
@@ -231,13 +231,31 @@ rule slim_clustered_vcf:
 # Filtering steps
 # ------------------------------------------------ #
 
+# Download discoSnp_Rad filtering scripts from GitHub
+# ------------------------------------------------
+rule download_discosnp_filtering_scripts:
+    output:
+        filter_csr = f"{scripts_dir}/filter_by_cluster_size_and_rank.py",
+        filter_cmismaf = f"{scripts_dir}/filter_vcf_by_indiv_cov_max_missing_and_maf.py",
+        filter_paralogs = f"{scripts_dir}/filter_paralogs.py"
+    shell:
+        """
+        wget -O {output.filter_csr} https://raw.githubusercontent.com/GATB/DiscoSnp/refs/heads/master/discoSnpRAD/post-processing_scripts/filter_by_cluster_size_and_rank.py
+        wget -O {output.filter_cmismaf} https://raw.githubusercontent.com/GATB/DiscoSnp/refs/heads/master/discoSnpRAD/post-processing_scripts/filter_vcf_by_indiv_cov_max_missing_and_maf.py
+        wget -O {output.filter_paralogs} https://raw.githubusercontent.com/GATB/DiscoSnp/refs/heads/master/discoSnpRAD/post-processing_scripts/filter_paralogs.py
+        chmod +x {output.filter_csr} {output.filter_cmismaf} {output.filter_paralogs}
+        """
+
 # Filter by cluster size and rank
 # ------------------------------------------------
 rule filter_cluster_size_rank:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz"
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz",
+        script = f"{scripts_dir}/filter_by_cluster_size_and_rank.py"
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz"
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"),
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf",
+        zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz"
     params:
         env = config["env"],
         min_cluster_size = 3,
@@ -248,10 +266,15 @@ rule filter_cluster_size_rank:
         mem_mb=200000
     shell:
         """
-        filter_by_cluster_size_and_rank.py -i {input.vcf} -o {output.vcf} \
-        --m {params.min_cluster_size} \
-        --M {params.Max_cluster_size} \
-        --r {params.rank}
+        gunzip -c {input.vcf} > {output.temp_vcf}
+
+        python {input.script} -i {output.temp_vcf} -o {output.vcf} \
+        -m {params.min_cluster_size} \
+        -M {params.Max_cluster_size} \
+        -r {params.rank}
+        
+        bgzip -c {output.vcf} > {output.zip}
+        tabix -p vcf {output.zip}
         """
 
 # Filter by coverage, missing genotypes, and minor allele frequency
