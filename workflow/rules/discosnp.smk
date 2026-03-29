@@ -43,7 +43,7 @@ SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
 rule all:
     input:
         expand(
-            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz", k=KMERS, D=DELS
+            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf.gz", k=KMERS, D=DELS
         )
 
 # ------------------------------------------------ #
@@ -240,9 +240,9 @@ rule download_discosnp_filtering_scripts:
         filter_paralogs = f"{scripts_dir}/filter_paralogs.py"
     shell:
         """
-        wget -O {output.filter_csr} https://raw.githubusercontent.com/GATB/DiscoSnp/refs/heads/master/discoSnpRAD/post-processing_scripts/filter_by_cluster_size_and_rank.py
-        wget -O {output.filter_cmismaf} https://raw.githubusercontent.com/GATB/DiscoSnp/refs/heads/master/discoSnpRAD/post-processing_scripts/filter_vcf_by_indiv_cov_max_missing_and_maf.py
-        wget -O {output.filter_paralogs} https://raw.githubusercontent.com/GATB/DiscoSnp/refs/heads/master/discoSnpRAD/post-processing_scripts/filter_paralogs.py
+        wget -O {output.filter_csr} https://github.com/GATB/DiscoSnp/blob/master/discoSnpRAD/post-processing_scripts/filter_by_cluster_size_and_rank.py
+        wget -O {output.filter_cmismaf} https://github.com/GATB/DiscoSnp/blob/master/discoSnpRAD/post-processing_scripts/filter_vcf_by_indiv_cov_max_missing_and_maf.py
+        wget -O {output.filter_paralogs} https://github.com/GATB/DiscoSnp/blob/master/discoSnpRAD/post-processing_scripts/filter_paralogs.py
         chmod +x {output.filter_csr} {output.filter_cmismaf} {output.filter_paralogs}
         """
 
@@ -272,7 +272,7 @@ rule filter_cluster_size_rank:
         -m {params.min_cluster_size} \
         -M {params.Max_cluster_size} \
         -r {params.rank}
-        
+
         bgzip -c {output.vcf} > {output.zip}
         tabix -p vcf {output.zip}
         """
@@ -283,7 +283,9 @@ rule filter_coverage_missing_maf:
     input:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz"
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz"
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf"),
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf",
+        zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz"
     params:
         env = config["env"],
         min_cov = 3, # From Eckert et al. 2024, ANGSD -setMinDepthInd 3, which is the minimum coverage per individual to call a genotype. 
@@ -298,10 +300,15 @@ rule filter_coverage_missing_maf:
         mem_mb=200000
     shell:
         """
-        filter_vcf_by_indiv_cov_max_missing_and_maf.py -i {input.vcf} -o {output.vcf} \
+        gunzip -c {input.vcf} > {output.temp_vcf}
+        
+        filter_vcf_by_indiv_cov_max_missing_and_maf.py -i {output.temp_vcf} -o {output.vcf} \
         --c {params.min_cov} \
         --m {params.max_missing} \
         --f {params.min_maf} 
+
+        bgzip -c {output.vcf} > {output.zip}
+        tabix -p vcf {output.zip}
         """
     
 # Filter by paralogs
@@ -310,7 +317,9 @@ rule filter_paralogs:
     input:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz"
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf.gz",
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_2.vcf"),
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf",
+        zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf.gz",
         tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf.gz.tbi"
     params:
         env = config["env"],
@@ -323,11 +332,14 @@ rule filter_paralogs:
         mem_mb=200000
     shell:
         """
-        filter_paralogs.py -i {input.vcf} -o {output.vcf} \
+        gunzip -c {input.vcf} > {output.temp_vcf}
+        
+        filter_paralogs.py -i {output.temp_vcf} -o {output.vcf} \
         -x {params.percent_heterozygotes} \
         -y {params.percent_variants}
-
-        tabix -p vcf {output.vcf}
+        
+        bgzip -c {output.vcf} > {output.zip}
+        tabix -p vcf {output.zip}
         """
 # Create variant report
 # ------------------------------------------------
