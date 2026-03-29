@@ -291,8 +291,8 @@ rule filter_coverage_missing_maf:
         min_cov = 3, # From Eckert et al. 2024, ANGSD -setMinDepthInd 3, which is the minimum coverage per individual to call a genotype. 
                      # This is not the same as the minimum depth to call a variant, but it is a similar concept and provides a starting point for filtering. 
                      # We can adjust this threshold based on the distribution of coverage in our data and the results of downstream analyses.
-        max_missing = 0.75, # From Eckert et al. 2024, ANGSD -minInd 165, which is the minimum number of individuals that must have a called genotype for a variant to be retained. 
-                             # This corresponds to a maximum missing data threshold of (165/220) = 0.75. 
+        max_missing = 0.25, # From Eckert et al. 2024, ANGSD -minInd 165, which is the minimum number of individuals that must have a called genotype for a variant to be retained. 
+                             # This corresponds to a maximum missing data threshold of ((220-165)/220) = 0.25. 
                              # We can adjust this threshold based on the distribution of missing data in our variants and the results of downstream analyses.
         min_maf = 0.05 # From Eckert et al. 2024, ANGSD -setMinMaf 0.05, which is the minimum minor allele frequency to retain a variant.
     threads: 4
