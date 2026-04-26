@@ -43,7 +43,7 @@ rule fastqc_raw:
         f"{rawqc_dir}/{{sample}}_fastqc.zip",
         f"{rawqc_dir}/{{sample}}_fastqc.html"
     shell:
-        "fastqc {input} -o {rawqcq_dir}"
+        "fastqc {input} -o {rawqc_dir}"
 
 # Multi-QC on raw reads
 # ------------------------------------------------ 
