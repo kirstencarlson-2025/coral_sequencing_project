@@ -367,17 +367,16 @@ rule filter_paralogs:
 # ------------------------------------------------
 rule create_paralog_variant_report:
     input:
-        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz", k=KMERS, D=DELS, hetero=disco_percent_heterozygotes, variants=disco_percent_variants)
+        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz", 
+        k=KMERS, 
+        D=DELS, 
+        hetero=disco_percent_heterozygotes, 
+        variants=disco_percent_variants)
     output:     
         report = f"{results_dir}/paralog_variant_report.txt"
     conda:
         config["env"]
     threads: 1
-    params:
-        k=lambda wildcards: wildcards.k,
-        D=lambda wildcards: wildcards.D,
-        hetero=lambda wildcards: wildcards.hetero,
-        variants=lambda wildcards: wildcards.variants
     run:
         import re 
         import os  
@@ -388,7 +387,7 @@ rule create_paralog_variant_report:
             for vcf in input:
                 fname = os.path.basename(vcf)
 
-                m = re.search(r"k(\d+).*D(\d+).*hetero(\d+).*variants(\d+)", fname)
+                m = re.search(r"k(\d+).*D(\d+).*hetero([0-9.]+).*variants([0-9.]+)"", fname)
                 k_val, D_val, hetero_val, variants_val = m.groups()
 
 
