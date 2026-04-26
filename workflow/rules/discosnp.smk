@@ -373,16 +373,24 @@ rule create_paralog_variant_report:
     conda:
         config["env"]
     threads: 1
+    params:
+        k=lambda wildcards: wildcards.k,
+        D=lambda wildcards: wildcards.D,
+        hetero=lambda wildcards: wildcards.hetero,
+        variants=lambda wildcards: wildcards.variants
     run:
-        import re   
+        import re 
+        import os  
 
         with open(output.report, "w") as out:
             out.write("k\tD\thetero\tvariants\tsnps\tindels\n")
 
             for vcf in input:
-                # Extract k and D, heterozygous threshold, and variant threshold from filename
-                m = re.search(r"k(\d+)_D(\d+)_hetero(\d+\.?\d*)_variants(\d+\.?\d*)", vcf)
+                fname = os.path.basename(vcf)
+
+                m = re.search(r"k(\d+).*D(\d+).*hetero(\d+).*variants(\d+)", fname)
                 k_val, D_val, hetero_val, variants_val = m.groups()
+
 
                 # Count variants
                 all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
@@ -391,5 +399,3 @@ rule create_paralog_variant_report:
 
                 # Write output
                 out.write(f"{k_val}\t{D_val}\t{hetero_val}\t{variants_val}\t{snp_count}\t{indel_count}\n")
-
-
