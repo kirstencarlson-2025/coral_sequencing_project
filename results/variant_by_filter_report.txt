@@ -1,0 +1,4 @@
+file	k	D	all_variants	snps	indels
+original	25	1	333904	333780	124
+csr	25	1	172743	172662	81
+cmismaf	25	1	29450	29397	53

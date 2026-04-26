@@ -60,10 +60,8 @@ scripts_dir = config["scripts_dir"]
 # Parameter sweep for discoSnp_Rad
 discosnp_kmers = config["discosnp_kmers"]
 discosnp_dels = config["discosnp_dels"]
-# Number of threads to use
-threads = config["threads"]
-quality = config["quality"]
-minlen = config["minlen"] 
+disco_percent_heterozygotes = config["disco_percent_heterozygotes"]
+disco_percent_variants = config["disco_percent_variants"]
 # Symbiont genomes
 symbiont_genomes = config["symbiont_genomes"]
 # Symbiont concatenated reference genome

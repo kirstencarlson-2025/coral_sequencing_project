@@ -10,7 +10,7 @@
 # CONFIGURATION
 # ------------------------------------------------ #
 
-configfile: "../../config/config.yaml"
+configfile: "../config/config.yaml"
 # PRJNA accession number
 prjna = config["prjna"]
 # Conda environment

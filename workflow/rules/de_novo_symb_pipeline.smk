@@ -20,7 +20,7 @@
 # CONFIGURATION
 # ------------------------------------------------ #
 
-configfile: "../../config/config.yaml"
+configfile: "../config/config.yaml"
 # Conda environment
 env = config["env"]
 # Raw fastq file directory

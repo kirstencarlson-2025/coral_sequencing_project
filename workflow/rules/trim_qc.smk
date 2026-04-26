@@ -14,7 +14,7 @@
 # CONFIGURATION
 # ------------------------------------------------ #
 
-configfile: "config.yaml"
+configfile: "../config/config.yaml"
 # Conda environment
 env: config["env"]
 # Raw fastq file directory
@@ -27,8 +27,6 @@ trimfq_dir = config["trimfq_dir"]
 trimqc_dir = config["trimqc_dir"] 
 # Script directory
 scripts_dir = config["scripts_dir"]
-# Number of threads to use
-threads = config["threads"] 
 quality = config["quality"]
 minlen = config["minlen"] 
 
