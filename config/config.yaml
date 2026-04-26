@@ -25,7 +25,7 @@ trimfq_dir: "/scratch/kcarls36/projects/data/trimfastq"
 # Trimmed QC file output directory
 trimqc_dir: "/scratch/kcarls36/projects/data/trimmedqc"
 # Excluded symbiont trimmed fastq directory
-trimfq_noSymb_dir: "/scratch/kcarls36/projects/data/trimfastq/trimmed_noSymb"
+trimfq_noSymb_dir: "/scratch/kcarls36/projects/data/trimmed_noSymb"
 # Aligned symbiont bam directory
 symb_align_dir: "/scratch/kcarls36/projects/data/alignments/symb_align"
 # Aligned S. intersepta bam directory
