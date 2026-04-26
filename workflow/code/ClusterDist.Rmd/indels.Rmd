@@ -1,0 +1,74 @@
+---
+title: "indels.Rmd"
+author: "KirstenCarlson"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Load packages
+```{r}
+install.packages("BiocManager")
+BiocManager::install("SeqArray")
+BiocManager::install("SNPRelate")
+BiocManager::install("SeqVarTools")
+install.packages("ggplot2")
+```
+
+```{r}
+library(SeqArray)
+library(dplyr)
+library(SNPRelate)
+library(ggplot2)
+library(SeqVarTools)
+```
+
+
+```{r}
+vcf <- "/scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/indels_only_k_25_D_5.vcf.reheader.gz"
+gds <- "/scratch/kcarls36/projects/data/alignments/sint_align/discosnp/k25_D5/indels_only_k_25_D_5.gds"
+
+seqVCF2GDS(vcf, gds, storage.option="ZIP_RA")
+```
+
+Open GDS file:
+```{r}
+gds <- seqOpen(gds)
+```
+
+```{r}
+# Extract read depth (dp) and allele depth (ad)
+dp <- seqGetData(gds, "annotation/format/DP")
+ad <- seqGetData(gds, "annotation/format/AD")
+ad_matrix <- ad$data
+
+ref <- ad_matrix[, seq(1, ncol(ad_matrix), by=2), drop=FALSE]
+alt <- ad_matrix[, seq(2, ncol(ad_matrix), by=2), drop=FALSE]
+
+# Compute allele balance for heterozygotes
+# AB = ref / (ref+alt)
+ab <- ref / (ref + alt)
+
+# Mask homozygotes
+gt <- seqGetData(gds, "genotype")
+gt_sum <- gt[1,,] + gt[2,,]
+ab[gt_sum !=1] <- NA
+
+het_per_variant <- colMeans(gt_sum == 1, na.rm=TRUE)
+mean_ab <- colMeans(ab, na.rm=TRUE)
+sd_ab <- apply(ab, 2, sd, na.rm=TRUE)
+```
+
+```{r}
+hist(mean_ab)
+hist(het_per_variant)
+hist(sd_ab)
+```
+
+```{r}
+high_conf <- which(
+  het_per_variant < 0.4 &
+  mean_ab > 0.2 & mean_ab < 0.8 &
+  sd_ab < 0.3
+)
+length(high_conf)  # number of high-confidence indels
+```
