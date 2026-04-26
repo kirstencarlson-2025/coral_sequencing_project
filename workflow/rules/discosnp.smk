@@ -329,7 +329,7 @@ rule filter_paralogs:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz",
         script = f"{scripts_dir}/filter_paralogs.py"
     output:
-        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_2.vcf"),
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_2_hetero{{hetero}}_variants{{variants}}.vcf"),
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf",
         zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz",
         tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz.tbi"
