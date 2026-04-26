@@ -30,11 +30,6 @@ scripts_dir = config["scripts_dir"]
 quality = config["quality"]
 minlen = config["minlen"] 
 
-# Get all FASTQ files and extract sample names
-SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
-print("Found samples:", SAMPLES)
-
-
 # ------------------------------------------------ #
 # RULES
 # ------------------------------------------------ #
