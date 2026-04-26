@@ -78,7 +78,7 @@ minlen = config["minlen"]
 import pandas as pd
 
 # Read SRR list to define final targets
-srr_df = pd.read_csv(f"{config['resource_dir']}/srr_2brad_list.txt", sep="\t", engine="python", header=None, names=["SRR", "SAMPLEID"])
+srr_df = pd.read_csv(f"{config['resource_dir']}/srr_2brad_list.txt", sep=",", engine="python", header=None, names=["SRR", "SAMPLEID"])
 SRR_MAP = dict(zip(srr_df["SAMPLEID"], srr_df["SRR"]))
 SAMPLES = list(SRR_MAP.keys())
 
