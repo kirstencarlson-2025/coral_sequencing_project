@@ -386,9 +386,12 @@ rule create_paralog_variant_report:
 
             for vcf in input:
                 fname = os.path.basename(vcf)
+                parts = fname.replace(".vcf.gz", "").split("_")
 
-                m = re.search(r"k(\d+)_c_3_D(\d+)_P_5_m_5_filtered_hetero([0-9.]+)_variants([0-9.]+)", fname)
-                k_val, D_val, hetero_val, variants_val = m.groups()
+                k_val = [p for p in parts if p.startswith("k")][0][1:]
+                D_val = [p for p in parts if p.startswith("D")][0][1:]
+                hetero_val = [p for p in parts if p.startswith("hetero")][0].replace("hetero", "")
+                variants_val = [p for p in parts if p.startswith("variants")][0].replace("variants", "")
 
 
                 # Count variants
