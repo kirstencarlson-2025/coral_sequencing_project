@@ -387,7 +387,7 @@ rule create_paralog_variant_report:
             for vcf in input:
                 fname = os.path.basename(vcf)
 
-                m = re.search(r"k(\d+).*D(\d+).*hetero([0-9.]+).*variants([0-9.]+)"", fname)
+                m = re.search(r"k(\d+)_c_3_D(\d+)_P_5_m_5_filtered_hetero([0-9.]+)_variants([0-9.]+)", fname)
                 k_val, D_val, hetero_val, variants_val = m.groups()
 
 
