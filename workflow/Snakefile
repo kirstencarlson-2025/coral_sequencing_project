@@ -19,43 +19,60 @@
 # ------------------------------------------------ #
 
 configfile: "../config/config.yaml"
-# PRJNA accession number
+# Project PRJNA number
 prjna = config["prjna"]
 # Conda environment
-env: config["env"]
+env = config["env"]
+# Path to snakemake environment
+env_path = config["env_path"]
+# List of 2bRAD srr numbers and sample IDs
+srr_2brad_list = config["srr_2brad_list"]
+# List of ITS2 srr numbers and sample IDs
+srr_its2_list = config["srr_its2_list"]
+# Resource directory (SRR numbers, run info)
+resource_dir = config["resource_dir"]
+# Results directory
+results_dir = config["results_dir"]
 # Raw fastq file directory
-rawfq_dir = config["rawfq_dir"] 
+rawfq_dir = config["rawfq_dir"]
 # Raw QC file output directory
-rawqc_dir = config["rawqc_dir"]  
+rawqc_dir = config["rawqc_dir"]
 # Trimmed fastq file directory
-trimfq_dir = config["trimfq_dir"] 
+trimfq_dir = config["trimfq_dir"]
 # Trimmed QC file output directory
-trimqc_dir = config["trimqc_dir"] 
+trimqc_dir = config["trimqc_dir"]
 # Excluded symbiont trimmed fastq directory
-trimfq_noSymb_dir = config["trimfq_noSymb_dir"] 
-# Merged unique reads directory
-merge_dir = config["merge_dir"] 
+trimfq_noSymb_dir = config["trimfq_noSymb_dir"]
 # Aligned symbiont bam directory
 symb_align_dir = config["symb_align_dir"]
-# Kraken database directory
-kraken_db_std = config["kraken_db_std"]
+# Aligned S. intersepta bam directory
+sint_align_dir = config["sint_align_dir"]
+# Merged unique reads directory
+merge_dir = config["merge_dir"]
 # De novo reference genome directory
 denovo_ref_dir = config["denovo_ref_dir"]
-# Script directory
-scripts_dir = config["scripts_dir"] 
-# Symbiont genomes
-symbiont_genomes = config["symbiont_genomes"]
-# Symbiont concatenated reference genome
-reference_symbiont = config["reference_symbiont"] 
+# Standard Kraken database directory
+kraken_db_std = config["kraken_db_std"]
+# Custom Kraken database directory
+kraken_db = config["kraken_db"]
 # Script directory
 scripts_dir = config["scripts_dir"]
 # Parameter sweep for discoSnp_Rad
-KMERS = config["discosnp_kmers"]
-DELS = config["discosnp_dels"]
+discosnp_kmers = config["discosnp_kmers"]
+discosnp_dels = config["discosnp_dels"]
 # Number of threads to use
-threads = config["threads"] 
+threads = config["threads"]
 quality = config["quality"]
 minlen = config["minlen"] 
+# Symbiont genomes
+symbiont_genomes = config["symbiont_genomes"]
+# Symbiont concatenated reference genome
+reference_symbiont = config["reference_symbiont"]
+# De novo reference genome
+denovo_ref_basename = config["denovo_ref_basename"]
+quality = config["quality"]
+minlen = config["minlen"]
+
 
 # ------------------------------------------------ #
 # LOCA RULE FILES
@@ -75,4 +92,25 @@ SAMPLES = srr_df["SAMPLEID"].tolist()
 # Define final target(s)
 rule all:
     input:
-        expand(f"{denovo_ref_dir}/cleanup.done", sample=SAMPLES)
+        # 1. Final processed FASTQs (per sample)
+        expand(f"{trimfq_noSymb_dir}/{{sample}}.fastq", sample=SAMPLES),
+
+        # 2. Final filtered VCFs (parameter sweep)
+        expand(
+            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/"
+            "discoRad_k_{k}_c_3_D_{D}_P_5_m_5_filtered_hetero{hetero}_variants{variants}.vcf.gz",
+            k=discosnp_kmers,
+            D=discosnp_dels,
+            hetero=config["disco_percent_heterozygotes"],
+            variants=config["disco_percent_variants"]
+        ),
+
+        # 3. Reports
+        f"{resource_dir}/variant_report_before_filtering.txt",
+        f"{resource_dir}/variant_by_filter_report.txt",
+        f"{resource_dir}/final_variant_report.txt",
+
+        # 4. Optional cleanup flags
+        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/cleanup.done",
+               k=discosnp_kmers,
+               D=discosnp_dels)
