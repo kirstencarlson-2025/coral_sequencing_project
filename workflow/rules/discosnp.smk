@@ -392,22 +392,4 @@ rule create_paralog_variant_report:
                 # Write output
                 out.write(f"{k_val}\t{D_val}\t{hetero_val}\t{variants_val}\t{snp_count}\t{indel_count}\n")
 
-# Remove intermediate files to save space
-# ------------------------------------------------
-rule cleanup_discosnp_intermediate:
-    input:
-        temp = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf",
-        temp_1 = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf",
-        sorted_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz",
-        reheader_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz",
-        # Include slim VCF only to force cleanup rule
-        slim = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim.vcf.gz"
-    output:
-        done = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/cleanup.done"
-    shell:
-        """
-        rm -f {input.temp} {input.temp_1} {input.reheader_clustered}
-        touch {output.done}
-        """
-
 
