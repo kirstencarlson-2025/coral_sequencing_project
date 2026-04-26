@@ -28,17 +28,15 @@ rawfq_dir = config["rawfq_dir"]
 # Download raw fastq files from SRA
 # ------------------------------------------------
 rule download_sra:
-    input:
-        f"{resource_dir}/srr_2brad_list.txt"
     output:
         f"{rawfq_dir}/{{sample}}.fastq"
     params:
-        srr = lambda wildcards: SRR[wildcards.sample]
+        SRR = lambda wildcards: SRR_MAP[wildcards.sample]
     conda:
         config["env"]
-    threads: 4   
+    threads: 4
     shell:
         """
-        fasterq-dump {params.srr} -O {rawfq_dir} --threads {threads}
-        mv {rawfq_dir}/{params.srr}.fastq {output}
+        fasterq-dump {params.SRR} -O {rawfq_dir} --threads {threads}
+        mv {rawfq_dir}/{params.SRR}.fastq {output}
         """
