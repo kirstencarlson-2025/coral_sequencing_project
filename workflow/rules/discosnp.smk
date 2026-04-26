@@ -388,8 +388,8 @@ rule create_paralog_variant_report:
                 fname = os.path.basename(vcf)
                 parts = fname.replace(".vcf.gz", "").split("_")
 
-                k_val = [p for p in parts if p.startswith("k")][0][1:]
-                D_val = [p for p in parts if p.startswith("D")][0][1:]
+                k_val = parts[parts.index("k") + 1]
+                D_val = parts[parts.index("D") + 1]
                 hetero_val = [p for p in parts if p.startswith("hetero")][0].replace("hetero", "")
                 variants_val = [p for p in parts if p.startswith("variants")][0].replace("variants", "")
 
