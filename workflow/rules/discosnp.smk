@@ -46,7 +46,11 @@ SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
 rule all:
     input:
         expand(
-            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered{{hetero}}_{{variants}}.vcf.gz", k=KMERS, D=DELS, hetero=disco_percent_heterozygotes, variants=disco_percent_variants
+            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz", 
+            k=KMERS, 
+            D=DELS, 
+            hetero=disco_percent_heterozygotes, 
+            variants=disco_percent_variants
         )
 
 
@@ -330,7 +334,7 @@ rule filter_paralogs:
         zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz",
         tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz.tbi"
     params:
-        env = config["env"],
+        env = config["env"]
         # Filter so that more than 50% of variants have more than 10% of heterozygous genotypes.
         # Example parameters given in DiscoSnp_Rad COOKBOOK. We can adjust these thresholds based on the distribution of heterozygous genotypes.
     threads: 4
