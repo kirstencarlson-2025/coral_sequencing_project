@@ -86,29 +86,38 @@ import pandas as pd
 # Read SRR list to define final targets
 srr_df = pd.read_csv(f"{config['resource_dir']}/srr_2brad_list.txt", sep="\t", header=None, names=["SRR", "SAMPLEID"])
 SAMPLES = srr_df["SAMPLEID"].tolist()  
+SRR_MAP = dict(zip(srr_df["SAMPLEID"], srr_df["SRR"]))
 
-# Define final target(s)
+# Define final targets
 rule all:
     input:
-        # 1. Final processed FASTQs (per sample)
-        expand(f"{trimfq_noSymb_dir}/{{sample}}.fastq", sample=SAMPLES),
+        # Metadata
+        f"{resource_dir}/srr_2brad_list.txt",
 
-        # 2. Final filtered VCFs (parameter sweep)
+        # Raw FASTQ (ensures download runs)
+        expand(f"{rawfq_dir}/{{sample}}.fastq", sample=SAMPLES),
+
+        # Raw QC
+        expand(f"{rawqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
+        f"{rawqc_dir}/multiqc_report.html",
+
+        # Trimmed QC
+        expand(f"{trimqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
+        f"{trimqc_dir}/multiqc_report.html",
+
+        # De novo reference
+        f"{denovo_ref_dir}/cleanup.done",
+
+        # DiscoSNP final outputs
         expand(
-            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/"
-            "discoRad_k_{k}_c_3_D_{D}_P_5_m_5_filtered_hetero{hetero}_variants{variants}.vcf.gz",
+            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz",
             k=discosnp_kmers,
             D=discosnp_dels,
             hetero=config["disco_percent_heterozygotes"],
             variants=config["disco_percent_variants"]
         ),
 
-        # 3. Reports
-        f"{resource_dir}/variant_report_before_filtering.txt",
-        f"{resource_dir}/variant_by_filter_report.txt",
-        f"{resource_dir}/final_variant_report.txt",
-
-        # 4. Optional cleanup flags
-        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/cleanup.done",
-               k=discosnp_kmers,
-               D=discosnp_dels)
+        # Reports
+        f"{results_dir}/variant_report_before_filtering.txt",
+        f"{results_dir}/variant_by_filter_report.txt",
+        f"{results_dir}/paralog_variant_report.txt"
