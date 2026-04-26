@@ -14,6 +14,8 @@ srr_2brad_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/srr_2bra
 srr_its2_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/srr_its2_list.txt"
 # Resource directory (SRR numbers, run info)
 resource_dir: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources"
+# Reults directory
+results_dir: "/home/kcarls36/projects/stephanocoenia_FKNMS/results"
 # Raw fastq file directory
 rawfq_dir: "/scratch/kcarls36/projects/data/fastq_raw"
 # Raw QC file output directory
