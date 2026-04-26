@@ -75,18 +75,18 @@ minlen = config["minlen"]
 # ------------------------------------------------ #
 # LOCA RULE FILES
 # ------------------------------------------------ #
-include: "rules/metadata.smk"
-include: "rules/download.smk"
-include: "rules/trim_qc.smk"
-include: "rules/de_novo_symb_pipeline.smk"
-include: "rules/discosnp.smk"
-
 import pandas as pd
 
 # Read SRR list to define final targets
 srr_df = pd.read_csv(f"{config['resource_dir']}/srr_2brad_list.txt", sep="\t", header=None, names=["SRR", "SAMPLEID"])
 SAMPLES = srr_df["SAMPLEID"].tolist()  
 SRR_MAP = dict(zip(srr_df["SAMPLEID"], srr_df["SRR"]))
+
+include: "rules/metadata.smk"
+include: "rules/download.smk"
+include: "rules/trim_qc.smk"
+include: "rules/de_novo_symb_pipeline.smk"
+include: "rules/discosnp.smk"
 
 # Define final targets
 rule all:
