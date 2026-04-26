@@ -6,6 +6,8 @@
 prjna: "PRJNA884416"
 # Conda environment
 env: "/home/kcarls36/projects/stephanocoenia_FKNMS/workflow/envs/env.yaml"
+# Path to snakemake environment
+env_path: "/home/kcarls36/projects/stephanocoenia_FKNMS/workflow/rules/.snakemake/conda/"
 # List of 2bRAD srr numbers and sample IDs
 srr_2brad_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/srr_2brad_list.txt"
 # List of ITS2 srr numbers and sample IDs
@@ -33,12 +35,14 @@ denovo_ref_dir: "/scratch/kcarls36/projects/data/merged_unique/de_novo_ref"
 # Standard Kraken database directory
 kraken_db_std: "/scratch/kcarls36/projects/data/kraken_db_standard"
 # Custom Kraken database directory
-kraken_db: "/scratch/kcarls36/projects/data/kraken_db"
+kraken_db: "/scratch/kcarls36/projects/data/krakendb"
 # Script directory
 scripts_dir: "/home/kcarls36/projects/stephanocoenia_FKNMS/workflow/scripts"
 # Parameter sweep for discoSnp_Rad
 discosnp_kmers: [25] # kmer lengths to test
 discosnp_dels: [5] # max deletion size
+disco_percent_heterozygotes: [0.1]
+disco_percent_variants: [0.5]
 # Symbiont genomes
 symbiont_genomes:
  - "/scratch/kcarls36/projects/data/symGenomes/Symbiodinium_microadriacticum_genome.scaffold.fasta"
@@ -49,7 +53,6 @@ symbiont_genomes:
 reference_symbiont: "/scratch/kcarls36/projects/data/symGenomes/reference_symbiont"
 # De novo reference genome
 denovo_ref_basename: "sint_denovo"
-
 quality: "15,15"
 minlen: 36
 
@@ -86,6 +89,5 @@ minlen: 36
 # ├── results/
 # │   ├── rawqc/
 # │   └── trimmedqc/
-
 
 
