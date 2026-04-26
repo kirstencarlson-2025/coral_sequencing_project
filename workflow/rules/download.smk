@@ -33,7 +33,7 @@ rule download_sra:
     output:
         f"{rawfq_dir}/{{sample}}.fastq"
     params:
-        srr = lambda wildcards: SRR_MAP[wildcards.sample]
+        srr = lambda wildcards: SRR[wildcards.sample]
     conda:
         config["env"]
     threads: 4   
