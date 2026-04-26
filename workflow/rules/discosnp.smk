@@ -26,6 +26,8 @@ trimfq_noSymb_dir = config["trimfq_noSymb_dir"]
 sint_align_dir = config["sint_align_dir"]
 # Resource directory (SRR numbers, run info)
 resource_dir = config["resource_dir"]
+# Results directory
+results_dir = config["results_dir"]
 # De novo reference directory
 denovo_ref_dir = config["denovo_ref_dir"]
 # De novo reference base name
@@ -109,7 +111,7 @@ rule create_variant_report_before_filtering:
     input:
         expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz", k=KMERS, D=DELS)
     output:
-        report = f"{resource_dir}/variant_report_before_filtering.txt"
+        report = f"{results_dir}/variant_report_before_filtering.txt"
     conda:
         config["env"]
     threads: 1
@@ -290,7 +292,7 @@ rule create_variant_report:
         csr = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz", k=KMERS, D=DELS),
         cmismaf = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz", k=KMERS, D=DELS)
     output:
-        report = f"{resource_dir}/variant_by_filter_report.txt"
+        report = f"{results_dir}/variant_by_filter_report.txt"
     conda:
         config["env"]
     threads: 1
@@ -333,8 +335,8 @@ rule filter_paralogs:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf",
         zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz",
         tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz.tbi"
-    params:
-        env = config["env"]
+    conda:
+        config["env"]
         # Filter so that more than 50% of variants have more than 10% of heterozygous genotypes.
         # Example parameters given in DiscoSnp_Rad COOKBOOK. We can adjust these thresholds based on the distribution of heterozygous genotypes.
     threads: 4
@@ -358,7 +360,7 @@ rule create_final_variant_report:
     input:
         expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz", k=KMERS, D=DELS, hetero=disco_percent_heterozygotes, variants=disco_percent_variants)
     output:     
-        report = f"{resource_dir}/paralog_variant_report.txt"
+        report = f"{results_dir}/paralog_variant_report.txt"
     conda:
         config["env"]
     threads: 1
@@ -395,7 +397,7 @@ rule cleanup_discosnp_intermediate:
         done = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/cleanup.done"
     shell:
         """
-        rm -f {input.temp} {input.temp_1} {input.sorted_reheader_clustered}
+        rm -f {input.temp} {input.temp_1} {input.reheader_clustered}
         touch {output.done}
         """
 
