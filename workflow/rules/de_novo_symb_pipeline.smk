@@ -50,16 +50,13 @@ reference_symbiont = config["reference_symbiont"]
 # De novo reference genome
 denovo_ref_basename = config["denovo_ref_basename"]   
 
-# Get all FASTQ files and extract sample names
-SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
-
 # Which rules to run locally
-local_rules = ["create_symb_reference",
-                "filter_tags",
-                "tab_to_fasta",
-                "rename_denovo_ref",
-                "construct_denovo_ref",
-                "cleanup_denovo_intermediate"]
+localrules: create_symb_reference,
+            filter_tags,
+            tab_to_fasta,
+            rename_denovo_ref,
+            construct_denovo_ref,
+            cleanup_denovo_intermediate
 
 # ------------------------------------------------ #
 # Rules
