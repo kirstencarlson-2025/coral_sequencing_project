@@ -86,7 +86,7 @@ rule trim_dedup:
 # ------------------------------------------------
 rule quality_filter:
     input:
-        f"{rawfq_dir}/{{sample}}.fastq"
+        f"{trimfq_dir}/{{sample}}.tr0"
     output:
         f"{trimfq_dir}/{{sample}}.fastq"
     params:
