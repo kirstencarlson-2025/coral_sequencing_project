@@ -358,7 +358,7 @@ rule create_final_variant_report:
     input:
         expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz", k=KMERS, D=DELS, hetero=disco_percent_heterozygotes, variants=disco_percent_variants)
     output:     
-        report = f"{resource_dir}/final_variant_report.txt"
+        report = f"{resource_dir}/paralog_variant_report.txt"
     conda:
         config["env"]
     threads: 1
