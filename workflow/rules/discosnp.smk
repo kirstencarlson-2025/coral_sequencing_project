@@ -7,6 +7,7 @@
 # This Snakefile runs the pipeline for processing filtered 2bRAD fastq files from Stephanocoenia intersepta samples with DiscoSNP to call variants.
 # It can be used to perform a parameter sweep of kmer length and max deletion size.
 # It also creates a slimmed vcf for exploratory QC with SeqArray in R, then filters variants by cluster size, rank, coverage, missing data, minor allele frequency, and paralogs.
+# Variant reports are created for parameter sweep of kmer length and max deletion size, as well as for filtering steps.
 
 
 # ------------------------------------------------ #
@@ -34,6 +35,8 @@ scripts_dir = config["scripts_dir"]
 # Parameter sweep for discoSnp_Rad
 KMERS = config["discosnp_kmers"]
 DELS = config["discosnp_dels"]
+disco_percent_heterozygotes = config["disco_percent_heterozygotes"]
+disco_percent_variants = config["disco_percent_variants"]
 
 # Get all FASTQ files and extract sample names
 SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
@@ -43,8 +46,9 @@ SAMPLES=glob_wildcards(f"{rawfq_dir}/{{sample}}.fastq").sample
 rule all:
     input:
         expand(
-            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf.gz", k=KMERS, D=DELS
+            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered{{hetero}}_{{variants}}.vcf.gz", k=KMERS, D=DELS, hetero=disco_percent_heterozygotes, variants=disco_percent_variants
         )
+
 
 # ------------------------------------------------ #
 # Rules
@@ -95,74 +99,35 @@ rule run_discosnpRad:
         tabix -p vcf discoRad_k_{wildcards.k}_c_3_D_{wildcards.D}_P_5_m_5_clustered.vcf.gz
         """
 
-# Create VCF
+# Create variant report before filtering
 # ------------------------------------------------
-rule create_vcf:
+rule create_variant_report_before_filtering:
     input:
-        fa = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_raw_filtered.fa",
-        ref = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta"
+        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz", k=KMERS, D=DELS)
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"
+        report = f"{resource_dir}/variant_report_before_filtering.txt"
     conda:
         config["env"]
-    shell:
-        """
-        $CONDA_PREFIX/scripts/run_VCF_creator.sh \
-        -G {input.ref} \
-        -p {input.fa} \
-        -e \
-        -o {output.vcf}
-        """
+    threads: 1
+    run:
+        import re   
+        
+        with open(output.report, "w") as out:
+            out.write("k\tD\tall_variants\tsnps\tindels\n")
 
-# Convert VCF from 0 to 1 format
-# ------------------------------------------------
-rule convert_vcf_format:
-    input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"
-    output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf"
-    conda:
-        config["env"]
-    shell:
-        """
-        python {scripts_dir}/zero2one.py -i {input.vcf} -o {output.vcf}
-        """
+            for vcf in input:
+                # Extract k and D
+                m = re.search(r"k(\d+)_D(\d+)", vcf)
+                k_val, D_val = m.groups()
 
-# Add cluster info to mapped VCF
-# ------------------------------------------------
-rule add_cluster_info:
-    input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf",
-        vcf_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf"
-    output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
-    resources:
-        mem_mb=50000,
-        runtime=1440
-    conda:
-        config["env"]
-    shell:
-        """
-        python $CONDA_PREFIX/discoSnpRAD/post-processing_scripts/add_cluster_info_to_mapped_vcf.py \
-        -m {input.vcf} \
-        -u {input.vcf_clustered} \
-        -o {output.vcf}
-        """
+                # Count variants
+                all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
+                snp_count = int(shell(f"bcftools view -H -v snps {vcf} | wc -l", read=True).strip())
+                indel_count = int(shell(f"bcftools view -H -v indels {vcf} | wc -l", read=True).strip())
 
-# Compress and index final mapped VCF
-# ------------------------------------------------
-rule compress_index_vcf:
-    input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
-    output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz"
-    conda:
-        config["env"]
-    shell:
-        """
-        bcftools sort {input.vcf} -Oz -o {output.vcf}
-        tabix -p vcf {output.vcf}
-        """
+                # Write output
+                out.write(f"{k_val}\t{D_val}\t{all_count}\t{snp_count}\t{indel_count}\n")
+
 
 # Prepare VCF for exploratory QC with SeqArray in R
 # Sort the clustered VCF
@@ -312,45 +277,14 @@ rule filter_coverage_missing_maf:
         tabix -p vcf {output.zip}
         """
     
-# Filter by paralogs
-# ------------------------------------------------
-rule filter_paralogs:
-    input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz",
-        script = f"{scripts_dir}/filter_paralogs.py"
-    output:
-        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_2.vcf"),
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf",
-        zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf.gz",
-        tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf.gz.tbi"
-    params:
-        env = config["env"],
-        # Filter so that more than 50% of variants have more than 10% of heterozygous genotypes.
-        # Example parameters given in DiscoSnp_Rad COOKBOOK. We can adjust these thresholds based on the distribution of heterozygous genotypes.
-        percent_heterozygotes = 0.1,
-        percent_variants = 0.5
-    threads: 4
-    resources:
-        mem_mb=200000
-    shell:
-        """
-        gunzip -c {input.vcf} > {output.temp_vcf}
-        
-        python {input.script} -i {output.temp_vcf} -o {output.vcf} \
-        -x {params.percent_heterozygotes} \
-        -y {params.percent_variants}
-        
-        bgzip -c {output.vcf} > {output.zip}
-        tabix -p vcf {output.zip}
-        """
-# Create variant report
+
+# Create variant report for first two filtering steps
 # ------------------------------------------------
 rule create_variant_report:
     input:
         original = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz", k=KMERS, D=DELS),
         csr = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz", k=KMERS, D=DELS),
-        cmismaf = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz", k=KMERS, D=DELS),
-        filtered = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered.vcf.gz", k=KMERS, D=DELS)
+        cmismaf = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz", k=KMERS, D=DELS)
     output:
         report = f"{resource_dir}/variant_by_filter_report.txt"
     conda:
@@ -363,8 +297,7 @@ rule create_variant_report:
         file_groups = {
             "original": input.original,
             "csr": input.csr,
-            "cmismaf": input.cmismaf,
-            "filtered": input.filtered
+            "cmismaf": input.cmismaf
         }
 
         with open(output.report, "w") as out:
@@ -384,6 +317,65 @@ rule create_variant_report:
                     # Write output
                     out.write(f"{ftype}\t{k_val}\t{D_val}\t{all_count}\t{snp_count}\t{indel_count}\n")
 
+
+# Filter by paralogs
+# ------------------------------------------------
+rule filter_paralogs:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz",
+        script = f"{scripts_dir}/filter_paralogs.py"
+    output:
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_2.vcf"),
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf",
+        zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz",
+        tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz.tbi"
+    params:
+        env = config["env"],
+        # Filter so that more than 50% of variants have more than 10% of heterozygous genotypes.
+        # Example parameters given in DiscoSnp_Rad COOKBOOK. We can adjust these thresholds based on the distribution of heterozygous genotypes.
+    threads: 4
+    resources:
+        mem_mb=200000
+    shell:
+        """
+        gunzip -c {input.vcf} > {output.temp_vcf}
+        
+        python {input.script} -i {output.temp_vcf} -o {output.vcf} \
+        -x {wildcards.hetero} \
+        -y {wildcards.variants}
+        
+        bgzip -c {output.vcf} > {output.zip}
+        tabix -p vcf {output.zip}
+        """
+
+# Create variant report after all filtering steps
+# ------------------------------------------------
+rule create_final_variant_report:
+    input:
+        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz", k=KMERS, D=DELS, hetero=disco_percent_heterozygotes, variants=disco_percent_variants)
+    output:     
+        report = f"{resource_dir}/final_variant_report.txt"
+    conda:
+        config["env"]
+    threads: 1
+    run:
+        import re   
+
+        with open(output.report, "w") as out:
+            out.write("k\tD\thetero\tvariants\tsnps\tindels\n")
+
+            for vcf in input:
+                # Extract k and D, heterozygous threshold, and variant threshold from filename
+                m = re.search(r"k(\d+)_D(\d+)_hetero(\d+\.?\d*)_variants(\d+\.?\d*)", vcf)
+                k_val, D_val, hetero_val, variants_val = m.groups()
+
+                # Count variants
+                all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
+                snp_count = int(shell(f"bcftools view -H -v snps {vcf} | wc -l", read=True).strip())
+                indel_count = int(shell(f"bcftools view -H -v indels {vcf} | wc -l", read=True).strip())
+
+                # Write output
+                out.write(f"{k_val}\t{D_val}\t{hetero_val}\t{variants_val}\t{snp_count}\t{indel_count}\n")
 
 # Remove intermediate files to save space
 # ------------------------------------------------
