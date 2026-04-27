@@ -9,7 +9,7 @@ env: "/home/kcarls36/projects/stephanocoenia_FKNMS/workflow/envs/env.yaml"
 # Path to snakemake environment
 env_path: "/home/kcarls36/projects/stephanocoenia_FKNMS/workflow/rules/.snakemake/conda/"
 # List of 2bRAD srr numbers and sample IDs
-srr_2brad_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/srr_2brad_list.txt"
+srr_2brad_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/samples_2brad.csv"
 # List of ITS2 srr numbers and sample IDs
 srr_its2_list: "/home/kcarls36/projects/stephanocoenia_FKNMS/resources/srr_its2_list.txt"
 # Resource directory (SRR numbers, run info)
