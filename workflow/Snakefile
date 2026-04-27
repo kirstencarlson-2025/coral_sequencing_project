@@ -81,7 +81,7 @@ import pandas as pd
 srr_df = pd.read_csv(f"{config['resource_dir']}/samples_2brad.csv", sep=",", engine="python", header=0)
 SRR_MAP = dict(zip(srr_df["SAMPLEID"], srr_df["SRR"]))
 SAMPLES = list(SRR_MAP.keys())
-SRRs = list(SRR_MAP.values())
+SRR = list(SRR_MAP.values())
 
 include: "rules/metadata.smk"
 include: "rules/download.smk"
