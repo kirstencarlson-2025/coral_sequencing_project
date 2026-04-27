@@ -85,7 +85,6 @@ SAMPLES = list(SRR_MAP.keys())
 include: "rules/metadata.smk"
 include: "rules/download.smk"
 include: "rules/trim_qc.smk"
-include: "rules/de_novo_symb_pipeline.smk"
 include: "rules/discosnp.smk"
 
 # Define final targets
@@ -104,9 +103,6 @@ rule all:
         # Trimmed QC
         expand(f"{trimqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
         f"{trimqc_dir}/multiqc_report.html",
-
-        # De novo reference
-        f"{denovo_ref_dir}/cleanup.done",
 
         # DiscoSNP final outputs
         expand(

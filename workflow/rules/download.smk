@@ -10,7 +10,7 @@
 # CONFIGURATION
 # ------------------------------------------------ #
 
-configfile: "../../config/config.yaml"
+configfile: "../config/config.yaml"
 # Conda environment
 env = config["env"]
 # List of 2bRAD srr numbers and sample IDs
