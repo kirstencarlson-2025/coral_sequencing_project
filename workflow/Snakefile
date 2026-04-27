@@ -121,7 +121,7 @@ rule all:
             f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim.vcf.gz",
             k=discosnp_kmers,
             D=discosnp_dels
-        )
+        ),
 
         # Reports
         f"{results_dir}/create_variant_report_before_filtering.txt",
