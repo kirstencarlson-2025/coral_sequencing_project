@@ -10,16 +10,15 @@
 # CONFIGURATION
 # ------------------------------------------------ #
 
-configfile: "../config/config.yaml"
+configfile: "../../config/config.yaml"
 # Conda environment
 env = config["env"]
 # List of 2bRAD srr numbers and sample IDs
-srr_2brad_list = config["srr_2brad_list"]
+srr_2brad_list = config["srr_2brad_list"]   
 # Resource directory (SRR numbers, run info)
 resource_dir = config["resource_dir"]
 # Raw fastq file directory
 rawfq_dir = config["rawfq_dir"] 
-
 
 # ------------------------------------------------ #
 # RULES
