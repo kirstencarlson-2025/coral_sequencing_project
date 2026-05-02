@@ -128,7 +128,7 @@ rule convert_vcf_format:
 # ------------------------------------------------
 rule add_cluster_info:
     input:
-        temp_vcf = temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/add_cluster_info_temp_2.vcf"),
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/add_cluster_info_temp_2.vcf"),
         vcf_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf"
     output:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
