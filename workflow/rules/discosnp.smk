@@ -101,6 +101,10 @@ rule create_vcf:
         temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/add_cluster_info_temp_1.vcf")
     conda:
         config["env"]
+    resources:
+        mem_mb=128000,
+        runtime=1440,
+        cpus_per_task=12
     shell:
         """
         outdir=$(dirname {output.temp_vcf})
