@@ -103,7 +103,7 @@ rule create_vcf:
         config["env"]
     shell:
         """
-        outdir=$(dirname {output.temp.vcf})
+        outdir=$(dirname {output.temp_vcf})
         mkdir -p $outdir
 
         cd $outdir
