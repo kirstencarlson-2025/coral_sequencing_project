@@ -277,23 +277,3 @@ rule index_denovo_ref:
         bowtie2-build --threads {threads} {input} {params.basename}
         samtools faidx {input}
         """
-        
-
-# Final cleanup of de novo reference intermediate files
-# ------------------------------------------------ 
-rule cleanup_denovo_intermediate:   
-    input:
-        fasta = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta",
-        tab = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.tab",
-        index = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.1.bt2"
-    output:
-        touch(f"{denovo_ref_dir}/cleanup.done")
-    shell:
-        """
-        rm {merge_dir}/*.uni
-        rm {merge_dir}/all.uniq
-        rm {merge_dir}/all.tab
-        rm {merge_dir}/all.fasta
-        rm {input.tab}
-        touch {output}
-     """
