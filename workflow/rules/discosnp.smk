@@ -1,7 +1,7 @@
 # ------------------------------------------------ #
 # 2bRAD DiscoSNP-RAD Snakefile
 # Kirsten Carlson
-# Updated 1/2026
+# Updated 5/2026
 # ------------------------------------------------ #
 
 # This Snakefile runs the pipeline for processing filtered 2bRAD fastq files from Stephanocoenia intersepta samples with DiscoSNP to call variants.
@@ -39,6 +39,28 @@ KMERS = config["discosnp_kmers"]
 DELS = config["discosnp_dels"]
 disco_percent_heterozygotes = config["disco_percent_heterozygotes"]
 disco_percent_variants = config["disco_percent_variants"]
+
+# Define final target(s)
+# Temporary rule_all for debugging
+rule all:
+    input:
+        # Final filtered VCFs
+        expand(
+            f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz", 
+            k=KMERS, 
+            D=DELS, 
+            hetero=disco_percent_heterozygotes, 
+            variants=disco_percent_variants
+        ),
+
+        # Variant reports
+        f"{results_dir}/variant_report_before_filtering.txt",
+        f"{results_dir}/variant_by_filter_report.txt",
+        f"{results_dir}/paralog_variant_report.txt",
+
+        # slimmed VCFs for QC
+        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim.vcf.gz", k=KMERS, D=DELS)
+
 
 
 # ------------------------------------------------ #
@@ -90,11 +112,83 @@ rule run_discosnpRad:
         tabix -p vcf discoRad_k_{wildcards.k}_c_3_D_{wildcards.D}_P_5_m_5_clustered.vcf.gz
         """
 
+### Steps to map discoSnp_Rad output with a reference
+# Create VCF
+# ------------------------------------------------
+rule create_vcf:
+    input:
+        fa = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_raw_filtered.fa",
+        ref = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"
+    conda:
+        config["env"]
+    shell:
+        """
+        $CONDA_PREFIX/scripts/run_VCF_creator.sh \
+        -G {input.ref} \
+        -p {input.fa} \
+        -e \
+        -o {output.vcf}
+        """
+
+# Convert VCF from 0 to 1 format
+# ------------------------------------------------
+rule convert_vcf_format:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf"
+    conda:
+        config["env"]
+    shell:
+        """
+        python {scripts_dir}/zero2one.py -i {input.vcf} -o {output.vcf}
+        """
+
+# Add cluster info to mapped VCF
+# ------------------------------------------------
+rule add_cluster_info:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf",
+        vcf_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
+    resources:
+        mem_mb=50000,
+        runtime=1440
+    conda:
+        config["env"]
+    shell:
+        """
+        python $CONDA_PREFIX/discoSnpRAD/post-processing_scripts/add_cluster_info_to_mapped_vcf.py \
+        -m {input.vcf} \
+        -u {input.vcf_clustered} \
+        -o {output.vcf}
+        """
+
+# Compress and index final mapped VCF
+# ------------------------------------------------
+rule compress_index_vcf:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz"
+    conda:
+        config["env"]
+    shell:
+        """
+        bcftools sort {input.vcf} -Oz -o {output.vcf}
+        tabix -p vcf {output.vcf}
+        """
+###
+
 # Create variant report before filtering
 # ------------------------------------------------
 rule create_variant_report_before_filtering:
     input:
-        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz", k=KMERS, D=DELS)
+        clustered = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz", k=KMERS, D=DELS),
+        mapped = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz")
     output:
         report = f"{results_dir}/variant_report_before_filtering.txt"
     conda:
@@ -106,7 +200,14 @@ rule create_variant_report_before_filtering:
         with open(output.report, "w") as out:
             out.write("k\tD\tall_variants\tsnps\tindels\n")
 
-            for vcf in input:
+            # Map labels to files listed
+            file_groups = {
+                "clustered" = input.clustered,
+                "mapped" = input.mapped
+            }
+            
+            for ftype, vcfs in file_groups.items():
+                for vcf in vcfs: 
                 # Extract k and D
                 m = re.search(r"k(\d+)_D(\d+)", vcf)
                 k_val, D_val = m.groups()
@@ -125,14 +226,17 @@ rule create_variant_report_before_filtering:
 # ------------------------------------------------
 rule sort_clustered_vcf:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz"
+        clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz",
+        mapped = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz"
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz"
+        clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz",
+        mapped = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz"
     conda:
         config["env"]
     shell:
         """
-        bcftools sort {input.vcf} -Oz -o {output.vcf}
+        bcftools sort {input.clustered} -Oz -o {output.clustered}
+        bcftools sort {input.mapped} -Oz -o {output.mapped}
         """
 
 # Reheader the VCF with correct sampleID (discoSnp_Rad ouputs sampleID as G1-Gx in the order of the fof.txt)
@@ -154,15 +258,18 @@ rule create_sample_map:
 # ------------------------------------------------
 rule reheader_vcf:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz",
+        clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz",
+        mapped = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz",
         sample_map = f"{sint_align_dir}/discosnp/sample_map.txt"
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz"
+        clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz",
+        mapped = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_mapped.vcf.gz"
     conda:
         config["env"]
     shell:
         """
-        bcftools reheader -s {input.sample_map} {input.vcf} -o {output.vcf}
+        bcftools reheader -s {input.sample_map} {input.clustered} -o {output.clustered}
+        bcftools reheader -s {input.sample_map} {input.mapped} -o {output.mapped}
         """
 
 # Slim up the sorted and reheadered clustered VCF for exploratory QC with SeqArray in R
@@ -206,7 +313,7 @@ rule download_discosnp_filtering_scripts:
 # ------------------------------------------------
 rule filter_cluster_size_rank:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz",
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_mapped.vcf.gz",
         script = f"{scripts_dir}/filter_by_cluster_size_and_rank.py"
     output:
         temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"),
@@ -273,7 +380,7 @@ rule filter_coverage_missing_maf:
 # ------------------------------------------------
 rule create_variant_by_filter_report:
     input:
-        original = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_clustered.vcf.gz", k=KMERS, D=DELS),
+        original = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_reheader_mapped.vcf.gz", k=KMERS, D=DELS),
         csr = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz", k=KMERS, D=DELS),
         cmismaf = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz", k=KMERS, D=DELS)
     output:
@@ -369,7 +476,6 @@ rule create_paralog_variant_report:
                 hetero_val = [p for p in parts if p.startswith("hetero")][0].replace("hetero", "")
                 variants_val = [p for p in parts if p.startswith("variants")][0].replace("variants", "")
 
-
                 # Count variants
                 all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
                 snp_count = int(shell(f"bcftools view -H -v snps {vcf} | wc -l", read=True).strip())
@@ -377,3 +483,5 @@ rule create_paralog_variant_report:
 
                 # Write output
                 out.write(f"{k_val}\t{D_val}\t{hetero_val}\t{variants_val}\t{snp_count}\t{indel_count}\n")
+
+
