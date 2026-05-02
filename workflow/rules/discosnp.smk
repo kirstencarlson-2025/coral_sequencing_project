@@ -188,7 +188,7 @@ rule compress_index_vcf:
 rule create_variant_report_before_filtering:
     input:
         clustered = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz", k=KMERS, D=DELS),
-        mapped = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz")
+        mapped = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz", k=KMERS, D=DELS)
     output:
         report = f"{results_dir}/variant_report_before_filtering.txt"
     conda:
