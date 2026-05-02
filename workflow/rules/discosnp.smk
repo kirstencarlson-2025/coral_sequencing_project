@@ -98,7 +98,7 @@ rule create_vcf:
         fa = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_raw_filtered.fa",
         ref = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta"
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/add_cluster_info_temp_1.vcf")
     conda:
         config["env"]
     shell:
@@ -107,28 +107,28 @@ rule create_vcf:
         -G {input.ref} \
         -p {input.fa} \
         -e \
-        -o {output.vcf}
+        -o {output.temp_vcf}
         """
 
 # Convert VCF from 0 to 1 format
 # ------------------------------------------------
 rule convert_vcf_format:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp.vcf"
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/add_cluster_info_temp_1.vcf")
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf"
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/add_cluster_info_temp_2.vcf")
     conda:
         config["env"]
     shell:
         """
-        python {scripts_dir}/zero2one.py -i {input.vcf} -o {output.vcf}
+        python {scripts_dir}/zero2one.py -i {input.temp_vcf} -o {output.temp_vcf}
         """
 
 # Add cluster info to mapped VCF
 # ------------------------------------------------
 rule add_cluster_info:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf",
+        temp_vcf = temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/add_cluster_info_temp_2.vcf"),
         vcf_clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf"
     output:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
@@ -140,7 +140,7 @@ rule add_cluster_info:
     shell:
         """
         python $CONDA_PREFIX/discoSnpRAD/post-processing_scripts/add_cluster_info_to_mapped_vcf.py \
-        -m {input.vcf} \
+        -m {input.temp_vcf} \
         -u {input.vcf_clustered} \
         -o {output.vcf}
         """
@@ -326,7 +326,7 @@ rule filter_coverage_missing_maf:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_csr.vcf.gz",
         script = f"{scripts_dir}/filter_vcf_by_indiv_cov_max_missing_and_maf.py"
     output:
-        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_1.vcf"),
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/filter_temp_1.vcf"),
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf",
         zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz"
     params:
@@ -402,7 +402,7 @@ rule filter_paralogs:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz",
         script = f"{scripts_dir}/filter_paralogs.py"
     output:
-        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/temp_2_hetero{{hetero}}_variants{{variants}}.vcf"),
+        temp_vcf = temp(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/filter_temp_2_hetero{{hetero}}_variants{{variants}}.vcf"),
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf",
         zip = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz",
         tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz.tbi"
