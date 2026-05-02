@@ -202,8 +202,8 @@ rule create_variant_report_before_filtering:
 
             # Map labels to files listed
             file_groups = {
-                "clustered" = input.clustered,
-                "mapped" = input.mapped
+                "clustered": input.clustered,
+                "mapped": input.mapped
             }
             
             for ftype, vcfs in file_groups.items():
