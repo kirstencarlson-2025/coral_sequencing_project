@@ -165,8 +165,8 @@ rule compress_index_vcf:
         config["env"]
     shell:
         """
-        bcftools sort {input.vcf} -Oz -o {output.vcf}
-        tabix -p vcf {output.vcf}
+        bgzip -f {input.vcf}
+        tabix -f -p vcf {output.vcf}
         """
 ###
 
