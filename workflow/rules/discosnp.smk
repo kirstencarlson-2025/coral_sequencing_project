@@ -163,9 +163,11 @@ rule compress_index_vcf:
         sorted = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz"
     conda:
         config["env"]
+    resources:
+        mem_mb=32000
     shell:
         """
-        bcftools sort {input.vcf} -Oz -o {output.sorted}
+        bcftools sort -m 4G {input.vcf} -Oz -o {output.sorted}
         tabix -f -p vcf {output.sorted}
         """
 ###
