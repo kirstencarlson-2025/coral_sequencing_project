@@ -200,6 +200,7 @@ rule create_variant_report_before_filtering:
         with open(output.report, "w") as out:
             out.write("k\tD\tall_variants\tsnps\tindels\n")
 
+
             # Map labels to files listed
             file_groups = {
                 "clustered": input.clustered,
@@ -207,10 +208,10 @@ rule create_variant_report_before_filtering:
             }
             
             for ftype, vcfs in file_groups.items():
-                for vcf in vcfs: 
-                # Extract k and D
-                m = re.search(r"k(\d+)_D(\d+)", vcf)
-                k_val, D_val = m.groups()
+                for vcf in vcfs:
+                    # Extract k and D
+                    m = re.search(r"k(\d+)_D(\d+)", vcf)
+                    k_val, D_val = m.groups()
 
                 # Count variants
                 all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
