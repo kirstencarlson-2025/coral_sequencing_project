@@ -55,8 +55,7 @@ localrules: create_symb_reference,
             filter_tags,
             tab_to_fasta,
             rename_denovo_ref,
-            construct_denovo_ref,
-            cleanup_denovo_intermediate
+            construct_denovo_ref
 
 # ------------------------------------------------ #
 # Rules
