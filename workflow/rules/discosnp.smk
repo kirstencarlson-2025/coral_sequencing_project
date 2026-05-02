@@ -160,13 +160,13 @@ rule compress_index_vcf:
     input:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz"
+        sorted = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz"
     conda:
         config["env"]
     shell:
         """
-        bgzip -f {input.vcf}
-        tabix -f -p vcf {output.vcf}
+        bcftools sort {input.vcf} -Oz -o {output.sorted}
+        tabix -f -p vcf {output.sorted}
         """
 ###
 
@@ -175,7 +175,7 @@ rule compress_index_vcf:
 rule create_variant_report_before_filtering:
     input:
         clustered = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz", k=KMERS, D=DELS),
-        mapped = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz", k=KMERS, D=DELS)
+        mapped = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz", k=KMERS, D=DELS)
     output:
         report = f"{results_dir}/variant_report_before_filtering.txt"
     conda:
@@ -214,17 +214,14 @@ rule create_variant_report_before_filtering:
 # ------------------------------------------------
 rule sort_clustered_vcf:
     input:
-        clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz",
-        mapped = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf.gz"
+        clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz"
     output:
-        clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz",
-        mapped = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz"
+        clustered = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_clustered.vcf.gz"
     conda:
         config["env"]
     shell:
         """
         bcftools sort {input.clustered} -Oz -o {output.clustered}
-        bcftools sort {input.mapped} -Oz -o {output.mapped}
         """
 
 # Reheader the VCF with correct sampleID (discoSnp_Rad ouputs sampleID as G1-Gx in the order of the fof.txt)
