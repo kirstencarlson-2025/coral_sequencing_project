@@ -158,7 +158,6 @@ rule add_cluster_info:
 # ------------------------------------------------
 rule get_contig_info:
     input:
-        ref = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta",
         fai = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta.fai"
     output: 
         f"{denovo_ref_dir}/reference_contig_info.txt"
@@ -166,7 +165,7 @@ rule get_contig_info:
         config["env"]
     shell:
         """
-        cut -f1,2 {input.fai} | awk '{print "##contig=<ID="$1",length="$2">"}' > {output}
+        cut -f1,2 {input.fai} | awk '{{print "##contig=<ID="$1",length="$2">"}}' > {output}
         """
 
 # Add header info to mapped VCF
