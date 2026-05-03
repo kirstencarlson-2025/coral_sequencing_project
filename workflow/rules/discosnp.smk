@@ -40,6 +40,15 @@ DELS = config["discosnp_dels"]
 disco_percent_heterozygotes = config["disco_percent_heterozygotes"]
 disco_percent_variants = config["disco_percent_variants"]
 
+localrules: create_file_of_files, 
+            convert_vcf_format, 
+            get_contig_info, 
+            add_denovo_contig_info, 
+            create_variant_report_before_filtering, 
+            create_sample_map, 
+            download_discosnp_filtering_scripts, 
+            create_variant_by_filter_report, 
+            create_paralog_variant_report
 
 # ------------------------------------------------ #
 # Rules
