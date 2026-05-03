@@ -166,7 +166,7 @@ rule get_contig_info:
         config["env"]
     shell:
         """
-        cut -f1,2 {input.fai} | awk '{print "##contig=<ID="$1",length="$2">"}' > {output}
+        cut -f1,2 {input.fai} | awk '{{print "##contig=<ID="$1",length="$2">"}}' > {output}
         """
 
 # Add header info to mapped VCF
