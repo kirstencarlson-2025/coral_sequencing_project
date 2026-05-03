@@ -154,6 +154,37 @@ rule add_cluster_info:
         -o {output.vcf}
         """
 
+# Exract contig info from de novo reference and add to mapped VCF
+# ------------------------------------------------
+rule get_contig_info:
+    input:
+        ref = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta",
+        fai = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta.fai"
+    output: 
+        f"{denovo_ref_dir}/reference_contig_info.txt"
+    conda:
+        config["env"]
+    shell:
+        """
+        cut -f1,2 {input.fai} | awk '{print "##contig=<ID="$1",length="$2">"}' > {output}
+        """
+
+# Add header info to mapped VCF
+# ------------------------------------------------
+rule add_denovo_contig_info:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf",
+        contig_info = f"{denovo_ref_dir}/reference_contig_info.txt"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_header.vcf"
+    conda:
+        config["env"]
+    shell:
+        """
+        bcftools annotate --header-lines {input.contig_info} -o {output.vcf} {input.vcf}
+        """
+
+
 # Compress and index final mapped VCF
 # ------------------------------------------------
 rule compress_index_vcf:
