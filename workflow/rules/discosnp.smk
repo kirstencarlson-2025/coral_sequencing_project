@@ -167,7 +167,7 @@ rule compress_index_vcf:
         mem_mb=32000
     shell:
         """
-        bcftools sort -m 4G {input.vcf} -Oz -o {output.sorted}
+        bcftools sort -T /scratch/kcarls36/tmp -m 4G {input.vcf} -Oz -o {output.sorted}
         tabix -f -p vcf {output.sorted}
         """
 ###
