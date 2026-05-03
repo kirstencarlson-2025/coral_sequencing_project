@@ -197,7 +197,7 @@ rule add_denovo_contig_info:
 # ------------------------------------------------
 rule compress_index_vcf:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_header.vcf"
     output:
         sorted = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz"
     conda:
