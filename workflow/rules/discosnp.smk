@@ -99,7 +99,7 @@ rule run_discosnpRad:
         tabix -p vcf discoRad_k_{wildcards.k}_c_3_D_{wildcards.D}_P_5_m_5_clustered.vcf.gz
         """
 
-### Steps to map discoSnp_Rad output with a reference
+### Steps to map discoSnp_Rad output with a reference ###
 # Create VCF
 # ------------------------------------------------
 rule create_vcf:
@@ -163,10 +163,24 @@ rule add_cluster_info:
         -o {output.vcf}
         """
 
+# Extract only mapped contigs
+# ------------------------------------------------
+rule extract_mapped_contigs:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf"
+    output:
+        f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_contigs_only.vcf"
+    shell:       
+        """
+        bcftools view -i 'CHROM ~ "chr"' {input.vcf} > {output}
+        """
+
+
 # Exract contig info from de novo reference and add to mapped VCF
 # ------------------------------------------------
 rule get_contig_info:
     input:
+        ref = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta",
         fai = f"{denovo_ref_dir}/{denovo_ref_basename}_cc.fasta.fai"
     output: 
         f"{denovo_ref_dir}/reference_contig_info.txt"
@@ -181,7 +195,7 @@ rule get_contig_info:
 # ------------------------------------------------
 rule add_denovo_contig_info:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped.vcf",
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_contigs_only.vcf",
         contig_info = f"{denovo_ref_dir}/reference_contig_info.txt"
     output:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_header.vcf"
@@ -206,7 +220,7 @@ rule compress_index_vcf:
         mem_mb=32000
     shell:
         """
-        bcftools sort -T /scratch/kcarls36/tmp -m 4G {input.vcf} -Oz -o {output.sorted}
+        bcftools sort {input.vcf} -Oz -o {output.sorted}
         tabix -f -p vcf {output.sorted}
         """
 ###
