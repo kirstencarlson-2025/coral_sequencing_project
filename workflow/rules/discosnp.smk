@@ -229,8 +229,7 @@ rule compress_index_vcf:
 # ------------------------------------------------
 rule create_variant_report_before_filtering:
     input:
-        clustered = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz", k=KMERS, D=DELS),
-        mapped = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz", k=KMERS, D=DELS)
+        clustered = expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_clustered.vcf.gz", k=KMERS, D=DELS)
     output:
         report = f"{results_dir}/variant_report_before_filtering.txt"
     conda:
@@ -242,15 +241,7 @@ rule create_variant_report_before_filtering:
         with open(output.report, "w") as out:
             out.write("k\tD\tall_variants\tsnps\tindels\n")
 
-
-            # Map labels to files listed
-            file_groups = {
-                "clustered": input.clustered,
-                "mapped": input.mapped
-            }
-            
-            for ftype, vcfs in file_groups.items():
-                for vcf in vcfs:
+                for vcf in input.clustered:
                     # Extract k and D
                     m = re.search(r"k(\d+)_D(\d+)", vcf)
                     k_val, D_val = m.groups()
