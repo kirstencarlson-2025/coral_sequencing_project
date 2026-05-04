@@ -106,9 +106,6 @@ rule all:
         expand(f"{trimqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
         f"{trimqc_dir}/multiqc_report.html",
 
-        # De novo reference
-        f"{denovo_ref_dir}/cleanup.done",
-
         # DiscoSNP final outputs
         expand(
             f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz",
