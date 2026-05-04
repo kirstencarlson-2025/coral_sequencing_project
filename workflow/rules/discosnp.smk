@@ -213,10 +213,10 @@ rule compress_index_vcf:
 # ------------------------------------------------
 rule add_denovo_contig_info:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_contigs_only.vcf",
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_contigs_only.vcf.gz",
         contig_info = f"{denovo_ref_dir}/reference_contig_info.txt"
     output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_header_contigs_only.vcf"
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_header_contigs_only.vcf.gz"
     conda:
         config["env"]
     shell:
