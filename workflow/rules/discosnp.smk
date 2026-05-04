@@ -191,29 +191,14 @@ rule get_contig_info:
         cut -f1,2 {input.fai} | awk '{{print "##contig=<ID="$1",length="$2">"}}' > {output}
         """
 
-# Add header info to mapped VCF
-# ------------------------------------------------
-rule add_denovo_contig_info:
-    input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_contigs_only.vcf",
-        contig_info = f"{denovo_ref_dir}/reference_contig_info.txt"
-    output:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_header.vcf"
-    conda:
-        config["env"]
-    shell:
-        """
-        bcftools annotate --header-lines {input.contig_info} -o {output.vcf} {input.vcf}
-        """
-
 
 # Compress and index final mapped VCF
 # ------------------------------------------------
 rule compress_index_vcf:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_header.vcf"
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_mapped_contigs_only.vcf"
     output:
-        sorted = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_mapped.vcf.gz"
+        sorted = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_contigs_only.vcf.gz"
     conda:
         config["env"]
     resources:
@@ -223,6 +208,22 @@ rule compress_index_vcf:
         bcftools sort {input.vcf} -Oz -o {output.sorted}
         tabix -f -p vcf {output.sorted}
         """
+
+# Add header info to mapped VCF
+# ------------------------------------------------
+rule add_denovo_contig_info:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_contigs_only.vcf",
+        contig_info = f"{denovo_ref_dir}/reference_contig_info.txt"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_sorted_header_contigs_only.vcf"
+    conda:
+        config["env"]
+    shell:
+        """
+        bcftools annotate --header-lines {input.contig_info} -o {output.vcf} {input.vcf}
+        """
+
 ###
 
 # Create variant report before filtering
@@ -242,17 +243,17 @@ rule create_variant_report_before_filtering:
             out.write("k\tD\tall_variants\tsnps\tindels\n")
 
             for vcf in input.clustered:
-                        # Extract k and D
-                        m = re.search(r"k(\d+)_D(\d+)", vcf)
-                        k_val, D_val = m.groups()
+                # Extract k and D
+                m = re.search(r"k(\d+)_D(\d+)", vcf)
+                k_val, D_val = m.groups()
 
-                        # Count variants
-                        all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
-                        snp_count = int(shell(f"bcftools view -H -v snps {vcf} | wc -l", read=True).strip())
-                        indel_count = int(shell(f"bcftools view -H -v indels {vcf} | wc -l", read=True).strip())
+                # Count variants
+                all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
+                snp_count = int(shell(f"bcftools view -H -v snps {vcf} | wc -l", read=True).strip())
+                indel_count = int(shell(f"bcftools view -H -v indels {vcf} | wc -l", read=True).strip())
 
-                        # Write output
-                        out.write(f"{k_val}\t{D_val}\t{all_count}\t{snp_count}\t{indel_count}\n")
+                # Write output
+                out.write(f"{k_val}\t{D_val}\t{all_count}\t{snp_count}\t{indel_count}\n")
 
 
 # Prepare VCF for exploratory QC with SeqArray in R
