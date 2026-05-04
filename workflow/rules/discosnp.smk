@@ -242,17 +242,17 @@ rule create_variant_report_before_filtering:
             out.write("k\tD\tall_variants\tsnps\tindels\n")
 
             for vcf in input.clustered:
-            # Extract k and D
-            m = re.search(r"k(\d+)_D(\d+)", vcf)
-            k_val, D_val = m.groups()
+                        # Extract k and D
+                        m = re.search(r"k(\d+)_D(\d+)", vcf)
+                        k_val, D_val = m.groups()
 
-            # Count variants
-            all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
-            snp_count = int(shell(f"bcftools view -H -v snps {vcf} | wc -l", read=True).strip())
-            indel_count = int(shell(f"bcftools view -H -v indels {vcf} | wc -l", read=True).strip())
+                        # Count variants
+                        all_count = int(shell(f"bcftools view -H {vcf} | wc -l", read=True).strip())
+                        snp_count = int(shell(f"bcftools view -H -v snps {vcf} | wc -l", read=True).strip())
+                        indel_count = int(shell(f"bcftools view -H -v indels {vcf} | wc -l", read=True).strip())
 
-            # Write output
-            out.write(f"{k_val}\t{D_val}\t{all_count}\t{snp_count}\t{indel_count}\n")
+                        # Write output
+                        out.write(f"{k_val}\t{D_val}\t{all_count}\t{snp_count}\t{indel_count}\n")
 
 
 # Prepare VCF for exploratory QC with SeqArray in R
