@@ -241,7 +241,7 @@ rule create_variant_report_before_filtering:
         with open(output.report, "w") as out:
             out.write("k\tD\tall_variants\tsnps\tindels\n")
 
-                for vcf in input.clustered:
+            for vcf in input.clustered:
                     # Extract k and D
                     m = re.search(r"k(\d+)_D(\d+)", vcf)
                     k_val, D_val = m.groups()
