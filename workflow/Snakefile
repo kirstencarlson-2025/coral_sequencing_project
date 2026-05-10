@@ -99,8 +99,8 @@ rule all:
         expand(f"{rawfq_dir}/{{sample}}.fastq", sample=SAMPLES),
 
         # Raw QC
-        # expand(f"{rawqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
-        # f"{rawqc_dir}/multiqc_report.html",
+        expand(f"{rawqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
+        f"{rawqc_dir}/multiqc_report.html",
 
         # Trimmed QC
         expand(f"{trimqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
@@ -127,9 +127,11 @@ rule all:
             k=discosnp_kmers,
             D=discosnp_dels
         ),
-        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_paralog_filtered.vcf.gz",
+        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_hetero{{hetero}}_variants{{variants}}_slim_paralog_filtered.vcf.gz",
             k=discosnp_kmers,
-            D=discosnp_dels
+            D=discosnp_dels,
+            hetero=config["disco_percent_heterozygotes"],
+            variants=config["disco_percent_variants"]
         ),
 
         # Reports
