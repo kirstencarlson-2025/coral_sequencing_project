@@ -516,4 +516,39 @@ rule create_paralog_variant_report:
                 # Write output
                 out.write(f"{k_val}\t{D_val}\t{hetero_val}\t{variants_val}\t{snp_count}\t{indel_count}\n")
 
+#------------------------------------------------- #
+# Prepare filtered VCF for downstream analyses (e.g. population structure, demographic modeling, selection scans)
+# ------------------------------------------------ #
+
+# Slim filtered (crismaf) VCF for downstream analyses
+# ------------------------------------------------
+rule slim_filtered_vcf:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filter_cmismaf.vcf.gz"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_cmismaf.vcf.gz",
+        tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_cmismaf.vcf.gz.tbi"
+    conda:
+        config["env"]
+    shell:
+        """
+        bcftools annotate -x INFO,FORMAT,CONTIG {input.vcf} -Oz -o {output.vcf}
+        tabix -p vcf {output.vcf}
+        """
+
+# Slim filtered (paralog) VCF for downstream analyses
+# ------------------------------------------------
+rule slim_filtered_paralog_vcf:
+    input:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{disco_percent_heterozygotes}_variants{disco_percent_variants}.vcf.gz"
+    output:
+        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_paralog_filtered.vcf.gz",
+        tbi = f"{sint_align_dir}/sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_paralog_filtered.vcf.gz.tbi"
+    conda:
+        config["env"]
+    shell:
+        """
+        bcftools annotate -x INFO,FORMAT,CONTIG {input.vcf} -Oz -o {output.vcf}
+        tabix -p vcf {output.vcf}
+        """     
 
