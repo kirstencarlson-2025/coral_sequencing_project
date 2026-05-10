@@ -543,7 +543,7 @@ rule slim_filtered_paralog_vcf:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{disco_percent_heterozygotes}_variants{disco_percent_variants}.vcf.gz"
     output:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_paralog_filtered.vcf.gz",
-        tbi = f"{sint_align_dir}/sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_paralog_filtered.vcf.gz.tbi"
+        tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_paralog_filtered.vcf.gz.tbi"
     conda:
         config["env"]
     shell:
