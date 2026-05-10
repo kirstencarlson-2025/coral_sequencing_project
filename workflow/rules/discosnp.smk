@@ -540,7 +540,11 @@ rule slim_filtered_vcf:
 # ------------------------------------------------
 rule slim_filtered_paralog_vcf:
     input:
-        vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{disco_percent_heterozygotes}_variants{disco_percent_variants}.vcf.gz"
+        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_filtered_hetero{{hetero}}_variants{{variants}}.vcf.gz", 
+        k=KMERS, 
+        D=DELS, 
+        hetero=disco_percent_heterozygotes, 
+        variants=disco_percent_variants)
     output:
         vcf = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_paralog_filtered.vcf.gz",
         tbi = f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_paralog_filtered.vcf.gz.tbi"
