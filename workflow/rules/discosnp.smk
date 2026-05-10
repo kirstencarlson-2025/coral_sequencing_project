@@ -552,6 +552,6 @@ rule slim_filtered_paralog_vcf:
         config["env"]
     shell:
         """
-        bcftools annotate -x INFO,FORMAT,CONTIG {input.vcf} -Oz -o {output.vcf}
+        bcftools annotate -x INFO,FORMAT,CONTIG {input} -Oz -o {output.vcf}
         tabix -p vcf {output.vcf}
         """     
