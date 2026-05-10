@@ -123,7 +123,7 @@ rule all:
             k=discosnp_kmers,
             D=discosnp_dels
         ),
-        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_c_3_D_{{D}}_P_5_m_5_slim_crismaf.vcf.gz",
+        expand(f"{sint_align_dir}/discosnp/k{{k}}_D{{D}}/discoRad_k_{{k}}_D_{{D}}_slim_crismaf.vcf.gz",
             k=discosnp_kmers,
             D=discosnp_dels
         ),
