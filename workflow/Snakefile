@@ -99,8 +99,8 @@ rule all:
         expand(f"{rawfq_dir}/{{sample}}.fastq", sample=SAMPLES),
 
         # Raw QC
-        expand(f"{rawqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
-        f"{rawqc_dir}/multiqc_report.html",
+        # expand(f"{rawqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
+        # f"{rawqc_dir}/multiqc_report.html",
 
         # Trimmed QC
         expand(f"{trimqc_dir}/{{sample}}_fastqc.zip", sample=SAMPLES),
